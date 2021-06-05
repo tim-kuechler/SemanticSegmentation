@@ -15,9 +15,7 @@ def get_parameters(model, bias=False):
         torchfcn.models.FCN16s,
         torchfcn.models.FCN8s,
     )
-    print("model", model)
     for m in model.modules():
-        print(m)
         if isinstance(m, nn.Conv2d):
             if bias:
                 yield m.bias
@@ -30,7 +28,7 @@ def get_parameters(model, bias=False):
         elif isinstance(m, modules_skipped):
             continue
         else:
-            raise ValueError('Unexpected module: %s' % str(m))
+            raise ValueError('Unexpected module: %s' % str(model))
 
 # https://github.com/shelhamer/fcn.berkeleyvision.org/blob/master/surgery.py
 def get_upsampling_weight(in_channels, out_channels, kernel_size):
