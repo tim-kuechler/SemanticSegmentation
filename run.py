@@ -49,7 +49,7 @@ def train(config, workdir):
 
         for img, seg in data_loader_train:
             img = img.to(config.device)
-            seg = seg.to(config.device, dtype=torch.long)
+            seg = seg.to(config.device)
 
             #Training step
             optimizer.zero_grad()
