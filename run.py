@@ -24,7 +24,8 @@ def train(config, workdir):
         assert config.data.n_channels == 3
         model = FCN8sAtOnce(config.data.n_labels)
     model = model.to(config.device)
-    model = nn.DataParallel(model)
+    if config.model.name == 'unet':
+        model = nn.DataParallel(model)
     optimizer = losses.get_optimizer(config, model)
     epoch = 1
     logging.info('Model and optimizer initialized')
