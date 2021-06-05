@@ -1,7 +1,7 @@
 import torch
 
 
-def restore_checkpoint(optimizer, model, ema, ckpt_dir, device='cuda'):
+def restore_checkpoint(optimizer, model, ckpt_dir, device='cuda'):
     loaded_state = torch.load(ckpt_dir, map_location=device)
     optimizer.load_state_dict(loaded_state['optimizer'])
     model.load_state_dict(loaded_state['models'], strict=False)
@@ -9,7 +9,7 @@ def restore_checkpoint(optimizer, model, ema, ckpt_dir, device='cuda'):
     return epoch
 
 
-def save_checkpoint(optimizer, model, ema, epoch, ckpt_dir):
+def save_checkpoint(optimizer, model, epoch, ckpt_dir):
     saved_state = {
         'optimizer': optimizer.state_dict(),
         'models': model.state_dict(),

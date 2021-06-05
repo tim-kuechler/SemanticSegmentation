@@ -1,16 +1,15 @@
 import torch
-import torch.optim as optim
 import torch.nn as nn
 import os
 from pathlib import Path
 from models.unet.unet import UNet
+from models.fcn.fcn8s import FCN8sAtOnce
 import datasets.datasets as data_loader
 import logging
 import time
 from models import utils
-import torch.nn.functional as F
 import torchvision.transforms as transforms
-
+import losses
 
 
 def train(config, workdir):
@@ -20,13 +19,13 @@ def train(config, workdir):
 
     #Initialize model and optimizer
     if config.model.name == 'unet':
-        model = UNet(config.data.n_channels, config.model.n_labels)
+        model = UNet(config.data.n_channels, config.data.n_labels)
     elif config.model.name == 'fcn':
-        pass
+        assert config.data.n_channels == 3
+        model = FCN8sAtOnce(config.data.n_labels)
     model = model.to(config.device)
     model = nn.DataParallel(model)
-    optimizer = optim.Adam(model.parameters(), lr=config.optim.lr, betas=(config.optim.beta1, 0.999),
-                           eps=config.optim.eps, weight_decay=config.optim.weight_decay)
+    optimizer = losses.get_optimizer(config, model)
     epoch = 1
     logging.info('Model and optimizer initialized')
 
@@ -38,11 +37,8 @@ def train(config, workdir):
     data_loader_train, data_loader_eval = data_loader.get_dataset(config, True)
     logging.info('Dataset initialized')
 
-    #Define loss function
-    def cross_entropy(pred, soft_targets):
-        logsoftmax = nn.LogSoftmax(dim=1)
-        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
-    loss_fn = cross_entropy
+    #Get loss function
+    loss_fn = losses.get_loss_fn(config)
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -51,13 +47,11 @@ def train(config, workdir):
         start_time = time.time()
 
         for img, seg in data_loader_train:
-            img = img.to(config.device)
-            seg = seg.to(config.device, dtype=torch.float32)
+            img, seg = img.to(config.device), seg.to(config.device, dtype=torch.float32)
 
             #Training step
             optimizer.zero_grad()
             pred = model(img)
-
             loss = loss_fn(pred, seg)
             loss.backward()
             if config.optim.grad_clip >= 0:
@@ -75,18 +69,16 @@ def train(config, workdir):
                 loss_eval = 0
 
                 for img_eval, seg_eval in data_loader_eval:
-                    img_eval = img_eval.to(config.device)
-                    seg_eval = seg_eval.to(config.device)
+                    img_eval, seg_eval = img_eval.to(config.device), seg_eval.to(config.device)
 
                     with torch.no_grad():
                         pred_eval = model(img_eval)
                     loss_eval += loss_fn(pred_eval, seg_eval)
-                logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {loss_eval}')
+                logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {loss_eval / len(data_loader_eval)}')
                 model.train()
 
 
-        # Save a checkpoint periodically
-        # Save the checkpoint.
+        #Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
         if epoch % config.training.checkpoint_save_freq == 0:
             utils.save_checkpoint(optimizer, model, epoch,

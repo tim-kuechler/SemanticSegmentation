@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 
 class FLICKR(Dataset):
-    def __init__(self, train=True, extra_data=False, size=None, random_crop=False,
+    def __init__(self, n_labels, train=True, extra_data=False, size=None, random_crop=False,
                  interpolation='bicubic', seg_v2=True, segmentation=True, data_csv=None,
                  data_dir=None, segmentation_dir=None):
         if data_csv is None:
@@ -24,7 +24,7 @@ class FLICKR(Dataset):
         else:
             self.data_csv = data_csv
 
-        self.n_labels = 182  # coco stuff labels
+        self.n_labels = n_labels
         if data_dir is None:
             self.data_root = '/export/data/compvis/datasets/rfw/flickr/data/'
         else:

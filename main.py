@@ -19,6 +19,10 @@ def get_parser(**parser_kwargs):
         help='Work folder',
     )
     parser.add_argument(
+        'model',
+        help='fcn or unet',
+    )
+    parser.add_argument(
         'mode',
         type=mode,
         help='train or eval',
@@ -49,7 +53,7 @@ if __name__ == '__main__':
 
 
     #Load config
-    config = config.get_config()
+    config = config.get_config(args.model)
 
     if args.mode == 'train':
         run.train(config, os.path.join('output', args.workdir))
