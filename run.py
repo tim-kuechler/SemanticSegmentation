@@ -39,7 +39,10 @@ def train(config, workdir):
     logging.info('Dataset initialized')
 
     #Define loss function
-    loss_fn = nn.BCELoss()
+    def cross_entropy(pred, soft_targets):
+        logsoftmax = nn.LogSoftmax()
+        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+    loss_fn = cross_entropy
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -78,7 +81,7 @@ def train(config, workdir):
 
                     with torch.no_grad():
                         pred_eval = model(img_eval)
-                    loss_eval += F.cross_entropy(pred_eval, seg_eval)
+                    loss_eval += loss_fn(pred_eval, seg_eval)
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {loss_eval}')
                 model.train()
 
