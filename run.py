@@ -40,7 +40,7 @@ def train(config, workdir):
 
     #Define loss function
     def cross_entropy(pred, soft_targets):
-        logsoftmax = nn.LogSoftmax()
+        logsoftmax = nn.LogSoftmax(dim=1)
         return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
     loss_fn = cross_entropy
 
