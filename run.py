@@ -19,9 +19,9 @@ def train(config, workdir):
     Path(eval_dir).mkdir(parents=True, exist_ok=True)
 
     #Initialize model and optimizer
-    if config.model.name is 'unet':
+    if config.model.name == 'unet':
         model = UNet(config.data.n_channels, config.model.n_labels)
-    elif config.model.name is 'fcn':
+    elif config.model.name == 'fcn':
         pass
     model = model.to(config.device)
     model = nn.DataParallel(model)

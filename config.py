@@ -7,6 +7,7 @@ def get_config():
 
     # Training
     config.training = training = ml_collections.ConfigDict()
+    training.epochs = 10
     training.batch_size = 64
     training.log_freq = 100
     training.eval_freq = 250
