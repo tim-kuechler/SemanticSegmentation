@@ -51,6 +51,8 @@ def train(config, workdir):
             img = img.to(config.device)
             seg = seg.to(config.device, dtype=torch.long)
 
+            print(seg.size())
+
             #Training step
             optimizer.zero_grad()
             pred = model(img)
