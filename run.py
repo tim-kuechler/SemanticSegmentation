@@ -58,7 +58,6 @@ def train(config, workdir):
             optimizer.zero_grad()
             pred = model(img)
 
-            print(pred)
             loss = loss_fn(pred, seg)
             loss.backward()
             if config.optim.grad_clip >= 0:
