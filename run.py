@@ -52,10 +52,13 @@ def train(config, workdir):
             seg = seg.to(config.device, dtype=torch.long)
 
             print(seg.size())
+            a = seg.max(dim=2, keepdim=True)
+            print(a)
 
             #Training step
             optimizer.zero_grad()
             pred = model(img)
+
             loss = loss_fn(pred, seg)
             loss.backward()
             if config.optim.grad_clip >= 0:
