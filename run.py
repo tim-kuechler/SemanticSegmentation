@@ -51,15 +51,11 @@ def train(config, workdir):
             img = img.to(config.device)
             seg = seg.to(config.device, dtype=torch.long)
 
-            print(seg.size())
-            a = torch.max(seg, dim=1)
-            print(a.size())
-
             #Training step
             optimizer.zero_grad()
             pred = model(img)
 
-            loss = loss_fn(pred, seg)
+            loss = F.cross_entropy(pred, seg)
             loss.backward()
             if config.optim.grad_clip >= 0:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.optim.grad_clip)
@@ -80,8 +76,8 @@ def train(config, workdir):
                     seg_eval = seg_eval.to(config.device)
 
                     with torch.no_grad():
-                        pred = model(img_eval)
-                    loss_eval += F.cross_entropy(pred, seg_eval)
+                        pred_eval = model(img_eval)
+                    loss_eval += F.cross_entropy(pred_eval, seg_eval)
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {loss_eval}')
                 model.train()
 
