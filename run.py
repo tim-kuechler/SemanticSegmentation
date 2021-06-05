@@ -53,7 +53,7 @@ def train(config, workdir):
 
             print(seg.size())
             a = seg.max(dim=2, keepdim=True)
-            print(a)
+            print(a.size())
 
             #Training step
             optimizer.zero_grad()
