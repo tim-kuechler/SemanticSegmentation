@@ -8,7 +8,6 @@ import datasets.datasets as data_loader
 import logging
 import time
 from models import utils
-import torchvision.transforms as transforms
 import losses
 
 
@@ -23,6 +22,7 @@ def train(config, workdir):
     elif config.model.name == 'fcn':
         assert config.data.n_channels == 3
         model = FCN8sAtOnce(config.data.n_labels)
+        model.copy_params_from_vgg16()
     model = model.to(config.device)
     if config.model.name == 'unet':
         model = nn.DataParallel(model)
