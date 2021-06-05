@@ -39,7 +39,7 @@ def train(config, workdir):
     logging.info('Dataset initialized')
 
     #Define loss function
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.BCELoss()
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -55,7 +55,8 @@ def train(config, workdir):
             optimizer.zero_grad()
             pred = model(img)
 
-            loss = F.cross_entropy(pred, seg)
+            print(pred)
+            loss = loss_fn(pred, seg)
             loss.backward()
             if config.optim.grad_clip >= 0:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.optim.grad_clip)
