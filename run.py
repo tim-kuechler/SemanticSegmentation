@@ -52,7 +52,7 @@ def train(config, workdir):
             seg = seg.to(config.device, dtype=torch.long)
 
             print(seg.size())
-            a = seg.max(dim=1, keepdim=True)
+            a = seg.max(dim=1)
             print(a.size())
 
             #Training step
