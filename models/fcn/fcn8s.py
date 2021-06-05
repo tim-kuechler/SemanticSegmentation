@@ -14,11 +14,9 @@ def get_parameters(model, bias=False):
         torchfcn.models.FCN32s,
         torchfcn.models.FCN16s,
         torchfcn.models.FCN8s,
-        torchfcn.models.FCN8sAtOnce
+        FCN8sAtOnce
     )
-    print(model.__class__.__name__ )
     for m in model.modules():
-        print(m.__class__.__name__ )
         if isinstance(m, nn.Conv2d):
             if bias:
                 yield m.bias
