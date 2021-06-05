@@ -86,25 +86,25 @@ def train(config, workdir):
         utils.save_checkpoint(optimizer, model, epoch,
                               os.path.join(checkpoint_dir, 'curr_cpt.pth'))
 
-        #Save some pictures
-        model.eval()
-        eval_iter = iter(data_loader_eval)
-        for i in range(config.training.n_eval_imgs):
-            img_eval, img_seg = next(eval_iter)
-            img_eval = img_eval.to(config.device)
-            with torch.no_grad():
-                img_seg_pred = model(img_eval)
-            img_eval = img_eval.to(torch.device('cpu'))
-            img_seg_pred = img_seg_pred.to(torch.device('cpu'))
-
-            #Save images
-            to_pil = transforms.ToPILImage()
-            pil_img = to_pil(img_eval)
-            pil_img.save(os.path.join(eval_dir, f'{i}_img.png'), 'PNG')
-            pil_seg = to_pil(img_seg)
-            pil_seg.save(os.path.join(eval_dir, f'{i}_seg.png'), 'PNG')
-            pil_pred_seg = to_pil(img_seg_pred)
-            pil_pred_seg.save(os.path.join(eval_dir, f'{i}_pred_seg.png'), 'PNG')
+        # #Save some pictures
+        # model.eval()
+        # eval_iter = iter(data_loader_eval)
+        # for i in range(config.training.n_eval_imgs):
+        #     img_eval, img_seg = next(eval_iter)
+        #     img_eval = img_eval.to(config.device)
+        #     with torch.no_grad():
+        #         img_seg_pred = model(img_eval)
+        #     img_eval = img_eval.to(torch.device('cpu'))
+        #     img_seg_pred = img_seg_pred.to(torch.device('cpu'))
+        #
+        #     #Save images
+        #     to_pil = transforms.ToPILImage()
+        #     pil_img = to_pil(img_eval)
+        #     pil_img.save(os.path.join(eval_dir, f'{i}_img.png'), 'PNG')
+        #     pil_seg = to_pil(img_seg)
+        #     pil_seg.save(os.path.join(eval_dir, f'{i}_seg.png'), 'PNG')
+        #     pil_pred_seg = to_pil(img_seg_pred)
+        #     pil_pred_seg.save(os.path.join(eval_dir, f'{i}_pred_seg.png'), 'PNG')
 
 
         time_for_epoch = time.time() - start_time

@@ -26,18 +26,14 @@ def _cross_entropy_soft(pred, soft_targets):
     return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
 
 def _cross_entropy_one_hot(pred, targets):
-    print(type(targets), targets.size())
     #targets = torch.argmax(targets, 1)
-    print(type(targets), targets.size())
     _, targets = targets.max(dim=1)
-    print(type(targets), targets.size())
-    print(type(Variable(targets)), Variable(targets).size())
     cross_entr = nn.CrossEntropyLoss()
     return cross_entr(pred, Variable(targets))
 
 def _cross_entropy2d(pred, targets):
     # input: (n, c, h, w), target: (n, c, h, w)
-    targets = torch.argmax(targets, 1)
+    _, targets = targets.max(dim=1)
     n, c, h, w = pred.size()
     # log_p: (n, c, h, w)
     if LooseVersion(torch.__version__) < LooseVersion('0.3'):
