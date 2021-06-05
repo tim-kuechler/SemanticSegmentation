@@ -28,6 +28,7 @@ def get_config_unet():
     # Data
     config.data = data = ml_collections.ConfigDict()
     data.dataset = 'flickr'
+    data.n_labelst = 182
     data.n_channels = 3
     data.image_size = 256
 
