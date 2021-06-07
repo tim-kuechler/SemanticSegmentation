@@ -13,12 +13,12 @@ def get_config_unet():
 
     # Training
     config.training = training = ml_collections.ConfigDict()
-    training.epochs = 10
-    training.batch_size = 8
-    training.log_freq = 100
-    training.eval_freq = 5000
+    training.epochs = 200
+    training.batch_size = 16
+    training.log_freq = 200
+    training.eval_freq = 2500
     training.n_eval_imgs = 10
-    training.checkpoint_save_freq = 5
+    training.checkpoint_save_freq = 15
 
     # Model
     config.model = model = ml_collections.ConfigDict()
@@ -48,12 +48,12 @@ def get_config_fcn():
 
     # Training
     config.training = training = ml_collections.ConfigDict()
-    training.epochs = 10
-    training.batch_size = 8
-    training.log_freq = 100
-    training.eval_freq = 5000
+    training.epochs = 200
+    training.batch_size = 16
+    training.log_freq = 200
+    training.eval_freq = 2500
     training.n_eval_imgs = 10
-    training.checkpoint_save_freq = 5
+    training.checkpoint_save_freq = 15
 
     # Model
     config.model = model = ml_collections.ConfigDict()
@@ -72,7 +72,7 @@ def get_config_fcn():
     optim.lr = 1e-4
     optim.momentum = 0.
     optim.gamma = 0.5
-    optim.step_size = 50
+    optim.step_size = 30
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 

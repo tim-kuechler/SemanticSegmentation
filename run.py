@@ -49,11 +49,10 @@ def train(config, workdir):
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
     for i in range(epoch, config.training.epochs + 1):
+        start_time = time.time()
         model.train()
         if config.model.name == 'fcn':
             scheduler.step()
-
-        start_time = time.time()
 
         for img, seg in data_loader_train:
             img, seg = img.to(config.device), seg.to(config.device, dtype=torch.float32)
