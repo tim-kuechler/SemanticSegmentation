@@ -72,6 +72,7 @@ def get_config_fcn():
     optim.lr = 1e-4
     optim.momentum = 0.
     optim.gamma = 0.5
+    optim.step_size = 50
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
