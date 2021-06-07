@@ -112,13 +112,3 @@ class FLICKR(Dataset):
         seg = seg.permute(2, 0, 1)
 
         return img, seg
-
-
-if __name__ == '__main__':
-    dset = FLICKR(train=True, size=256, data_csv='flickr_landscapes_train_split.txt')
-    img, seg = dset[0]
-
-    print(type(img))
-    print(img.size())
-    print(type(seg))
-    print(seg.size())

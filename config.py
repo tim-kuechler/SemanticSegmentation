@@ -38,7 +38,6 @@ def get_config_unet():
     optim.lr = 2e-4
     optim.beta1 = 0.9
     optim.eps = 1e-8
-    optim.grad_clip = 0.1
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -69,10 +68,10 @@ def get_config_fcn():
 
     # Optimization
     config.optim = optim = ml_collections.ConfigDict()
-    optim.weight_decay = 0.0005
-    optim.lr = 1e-10
-    optim.momentum = 0.99
-    optim.grad_clip = 0.
+    optim.weight_decay = 1e-5
+    optim.lr = 1e-4
+    optim.momentum = 0.
+    optim.gamma = 0.5
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 

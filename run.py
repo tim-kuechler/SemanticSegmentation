@@ -3,12 +3,14 @@ import torch.nn as nn
 import os
 from pathlib import Path
 from models.unet.unet import UNet
-from models.fcn.fcn8s import FCN8sAtOnce
 import datasets.datasets as data_loader
 import logging
 import time
 from models import utils
 import losses
+from torch.optim import lr_scheduler
+from models.fcn import fcn, vgg_net
+import torchvision.transforms as transforms
 
 
 def train(config, workdir):
@@ -21,12 +23,15 @@ def train(config, workdir):
         model = UNet(config.data.n_channels, config.data.n_labels)
     elif config.model.name == 'fcn':
         assert config.data.n_channels == 3
-        model = FCN8sAtOnce(config.data.n_labels)
-        model.copy_params_from_vgg16()
+        vgg_model = vgg_net.VGGNet()
+        model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
     model = model.to(config.device)
-    if config.model.name == 'unet':
-        model = nn.DataParallel(model)
+    model = nn.DataParallel(model)
+
+    #Get optimizer
     optimizer = losses.get_optimizer(config, model)
+    if config.model.name == 'fcn':
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
     epoch = 1
     logging.info('Model and optimizer initialized')
 
@@ -45,6 +50,9 @@ def train(config, workdir):
     step = 0
     for i in range(epoch, config.training.epochs + 1):
         model.train()
+        if config.model.name == 'fcn':
+            scheduler.step()
+
         start_time = time.time()
 
         for img, seg in data_loader_train:
@@ -55,8 +63,6 @@ def train(config, workdir):
             pred = model(img)
             loss = loss_fn(pred, seg)
             loss.backward()
-            if config.optim.grad_clip >= 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.optim.grad_clip)
             optimizer.step()
             step += 1
 
@@ -86,26 +92,6 @@ def train(config, workdir):
                                   os.path.join(checkpoint_dir, f'checkpoint_{epoch}.pth'))
         utils.save_checkpoint(optimizer, model, epoch,
                               os.path.join(checkpoint_dir, 'curr_cpt.pth'))
-
-        # #Save some pictures
-        # model.eval()
-        # eval_iter = iter(data_loader_eval)
-        # for i in range(config.training.n_eval_imgs):
-        #     img_eval, img_seg = next(eval_iter)
-        #     img_eval = img_eval.to(config.device)
-        #     with torch.no_grad():
-        #         img_seg_pred = model(img_eval)
-        #     img_eval = img_eval.to(torch.device('cpu'))
-        #     img_seg_pred = img_seg_pred.to(torch.device('cpu'))
-        #
-        #     #Save images
-        #     to_pil = transforms.ToPILImage()
-        #     pil_img = to_pil(img_eval)
-        #     pil_img.save(os.path.join(eval_dir, f'{i}_img.png'), 'PNG')
-        #     pil_seg = to_pil(img_seg)
-        #     pil_seg.save(os.path.join(eval_dir, f'{i}_seg.png'), 'PNG')
-        #     pil_pred_seg = to_pil(img_seg_pred)
-        #     pil_pred_seg.save(os.path.join(eval_dir, f'{i}_pred_seg.png'), 'PNG')
 
 
         time_for_epoch = time.time() - start_time
