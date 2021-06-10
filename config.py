@@ -15,7 +15,7 @@ def get_config_unet():
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 200
     training.batch_size = 16
-    training.log_freq = 200
+    training.log_freq = 100
     training.eval_freq = 2500
     training.n_eval_imgs = 10
     training.checkpoint_save_freq = 15
@@ -48,7 +48,7 @@ def get_config_fcn():
 
     # Training
     config.training = training = ml_collections.ConfigDict()
-    training.epochs = 200
+    training.epochs = 100
     training.batch_size = 16
     training.log_freq = 200
     training.eval_freq = 2500

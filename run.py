@@ -10,7 +10,7 @@ from models import utils
 import losses
 from torch.optim import lr_scheduler
 from models.fcn import fcn, vgg_net
-import torchvision.transforms as transforms
+import numpy as np
 
 
 def train(config, workdir):
@@ -40,7 +40,7 @@ def train(config, workdir):
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
     #Get data iterators
-    data_loader_train, data_loader_eval = data_loader.get_dataset(config, True)
+    data_loader_train, data_loader_eval = data_loader.get_dataset(config, train=True)
     logging.info('Dataset initialized')
 
     #Get loss function
@@ -51,16 +51,14 @@ def train(config, workdir):
     for i in range(epoch, config.training.epochs + 1):
         start_time = time.time()
         model.train()
-        if config.model.name == 'fcn':
-            scheduler.step()
 
-        for img, seg in data_loader_train:
-            img, seg = img.to(config.device), seg.to(config.device, dtype=torch.float32)
+        for img, target in data_loader_train:
+            img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
 
             #Training step
             optimizer.zero_grad()
             pred = model(img)
-            loss = loss_fn(pred, seg)
+            loss = loss_fn(pred, target)
             loss.backward()
             optimizer.step()
             step += 1
@@ -72,15 +70,15 @@ def train(config, workdir):
             #Evaluation of model
             if step % config.training.eval_freq == 0:
                 model.eval()
-                loss_eval = 0
+                tot_eval_loss = 0
 
-                for img_eval, seg_eval in data_loader_eval:
-                    img_eval, seg_eval = img_eval.to(config.device), seg_eval.to(config.device)
+                for eval_img, eval_target in data_loader_eval:
+                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device)
 
                     with torch.no_grad():
-                        pred_eval = model(img_eval)
-                    loss_eval += loss_fn(pred_eval, seg_eval)
-                logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {loss_eval / len(data_loader_eval)}')
+                        eval_pred = model(eval_img)
+                    tot_eval_loss += loss_fn(eval_pred, eval_target).item()
+                logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
 
@@ -92,8 +90,70 @@ def train(config, workdir):
         utils.save_checkpoint(optimizer, model, epoch,
                               os.path.join(checkpoint_dir, 'curr_cpt.pth'))
 
+        #FCN scheduler step
+        if config.model.name == 'fcn':
+            scheduler.step()
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
         epoch += 1
 
+def eval(config, workdir):
+    #Load model
+    loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
+    if config.model.name == 'unet':
+        model = UNet(config.data.n_channels, config.data.n_labels)
+    elif config.model.name == 'fcn':
+        vgg_model = vgg_net.VGGNet()
+        model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
+    model = model.to(config.device)
+    model.load_state_dict(loaded_state['models'], strict=False)
+    logging.info('Model loaded')
+
+    # Get data iterators
+    data_loader_train, data_loader_eval = data_loader.get_dataset(config, train=False)
+    logging.info('Dataset initialized')
+
+    total_ious = []
+    pixel_accs = []
+    for img, target in data_loader_eval:
+        img = img.to(config.device)
+        N, _, h, w = target.shape
+
+        pred = model(img)
+        pred = pred.cpu().numpy()
+        pred = pred.transpose(0, 2, 3, 1).reshape(-1, config.data.n_labels).argmax(axis=1).reshape(N, h, w)
+
+        target = target.cpu().numpy()
+        target = target.transpose(0, 2, 3, 1).reshape(-1, config.data.n_labels).argmax(axis=1).reshape(N, h, w)
+
+        for p, t in zip(pred, target):
+            total_ious.append(_iou(p, t))
+            pixel_accs.append(_pixel_acc(p, t))
+
+        total_ious = np.array(total_ious).transpose()  # n_class * val_len
+        ious = np.nanmean(total_ious, axis=1)
+        pixel_accs = np.array(pixel_accs).mean()
+        print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
+
+
+# borrow functions and modify it from
+# Calculates class intersections over unions
+def _iou(pred, target, config):
+    ious = []
+    for cls in range(config.data.n_labels):
+        pred_inds = pred == cls
+        target_inds = target == cls
+        intersection = pred_inds[target_inds].sum()
+        union = pred_inds.sum() + target_inds.sum() - intersection
+        if union == 0:
+            ious.append(float('nan'))  # if there is no ground truth, do not include in evaluation
+        else:
+            ious.append(float(intersection) / max(union, 1))
+    return ious
+
+
+def _pixel_acc(pred, target):
+    correct = (pred == target).sum()
+    total = (target == target).sum()
+    return correct / total
