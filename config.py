@@ -38,6 +38,7 @@ def get_config_unet():
     optim.lr = 2e-4
     optim.beta1 = 0.9
     optim.eps = 1e-8
+    optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -73,6 +74,7 @@ def get_config_fcn():
     optim.momentum = 0.
     optim.gamma = 0.5
     optim.step_size = 30
+    optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 

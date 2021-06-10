@@ -46,6 +46,10 @@ def train(config, workdir):
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
 
+    #Get step function
+    scaler = None if not config.optim.mixed_prec else torch.cuda.amp.GradScaler()
+    step_fn = losses.get_step_fn(config, model, optimizer, loss_fn, scaler)
+
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
     for i in range(epoch, config.training.epochs + 1):
@@ -56,11 +60,7 @@ def train(config, workdir):
             img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
 
             #Training step
-            optimizer.zero_grad()
-            pred = model(img)
-            loss = loss_fn(pred, target)
-            loss.backward()
-            optimizer.step()
+            loss = step_fn(img, target)
             step += 1
 
             #Report training loss

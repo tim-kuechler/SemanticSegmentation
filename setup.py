@@ -11,10 +11,8 @@ setup(
     install_requires=[
         'torch',
         'numpy',
-        'tqdm',
         'ninja',
         'ml_collections',
-        'torchfcn',
         'albumentations',
         'opencv-python'
     ]
