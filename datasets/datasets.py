@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-from .flickr.flickr import FLICKR
+from flickr.flickr import FLICKR
 
 
 def get_dataset(config, train=True):
