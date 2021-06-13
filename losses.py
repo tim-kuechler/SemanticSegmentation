@@ -50,7 +50,6 @@ def get_step_fn(config, model, optimizer, loss_fn, scaler=None):
         optimizer.zero_grad()
         with torch.cuda.amp.autocast():
             pred = model(img)
-            print(pred.size())
             loss = loss_fn(pred, target)
         scaler.scale(loss).backward()
         scaler.step(optimizer)

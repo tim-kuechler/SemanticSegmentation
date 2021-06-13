@@ -113,6 +113,7 @@ def train(config, workdir):
             if i==1: break
             model.eval()
             pred = model(img)
+            pred = torch.argmax(pred, dim=1)
 
             #Create dir for epoch
             this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
