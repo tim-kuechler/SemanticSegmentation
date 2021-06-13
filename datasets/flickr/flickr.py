@@ -65,7 +65,6 @@ class FLICKR(Dataset):
         target = F.to_tensor(target) * 255
         target = torch.squeeze(target, dim=0)
         target = torch.nn.functional.one_hot(target.long(), num_classes=self.n_labels).permute(2, 0, 1)
-        target = torch.unsqueeze(target, dim=0)
 
         return image, target
 

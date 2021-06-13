@@ -141,11 +141,7 @@ class CITYSCAPES256(Dataset):
                     trainId = id2trainId[str(0)]
                 target[h, w] = trainId
 
-        print("1", target.size())
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
-        print("2", target.size())
-        target = torch.unsqueeze(target, dim=0)
-        print("3", target.size())
 
         return image, target
 
