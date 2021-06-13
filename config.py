@@ -49,8 +49,8 @@ def get_config_fcn():
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 200
     training.batch_size = 8
-    training.log_freq = 200
-    training.eval_freq = 2500
+    training.log_freq = 50
+    training.eval_freq = 1000
     training.checkpoint_save_freq = 15
 
     # Model

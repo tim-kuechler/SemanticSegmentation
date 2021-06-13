@@ -125,10 +125,10 @@ def train(config, workdir):
             save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
             #Save prediction as color image
-            pred_color = torch.zeros((pred.shape[0], 3, pred.shape[2], pred.shape[3]), device=config.device)
+            pred_color = torch.zeros((pred.shape[0], 3, pred.shape[1], pred.shape[2]), device=config.device)
             for N in range(0, pred.shape[0]):
-                for h in range(0, pred.shape[2]):
-                    for w in range(0, pred.shape[3]):
+                for h in range(0, pred.shape[1]):
+                    for w in range(0, pred.shape[1]):
                         color = trainId2Color[str(pred[N, 0, h, w].item())]
                         pred_color[N, 0, h, w] = color[0]
                         pred_color[N, 1, h, w] = color[1]
