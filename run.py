@@ -25,6 +25,7 @@ def train(config, workdir):
         assert config.data.n_channels == 3
         vgg_model = vgg_net.VGGNet()
         model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
+        vgg_model.to(config.device)
     model = model.to(config.device)
     model = nn.DataParallel(model)
 

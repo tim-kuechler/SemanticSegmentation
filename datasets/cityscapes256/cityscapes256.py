@@ -4,7 +4,7 @@ import os
 from PIL import Image
 from collections import namedtuple
 import torchvision.transforms.functional as F
-from random import seed, randint
+from random import randint
 import torch.nn.functional
 
 
@@ -88,13 +88,13 @@ class CITYSCAPES256(Dataset):
                 self.targets.append(os.path.join(target_dir, target_name))
 
         # change id to class index
-        id2trainId[0] = 0  # add an void class
+        id2trainId[str(0)] = 0  # add an void class
         for obj in labels:
             if obj.ignoreInEval:
                 continue
             idx = obj.trainId
             id = obj.id
-            id2trainId[id] = idx
+            id2trainId[str(id)] = idx
 
     def __getitem__(self, index: int):
         """
@@ -111,25 +111,26 @@ class CITYSCAPES256(Dataset):
         target = F.resize(target, [256, 512], interpolation=F.InterpolationMode.BICUBIC)
 
         #Crop
-        seed(42)
-        left = randint(0, 255)
+        left = randint(0, 256)
         image = F.crop(image, 0, left, 256, 256)
         target = F.crop(target, 0, left, 256, 256)
-
-        #Change labels in targed to train ids
-        for h in range(256):
-            for w in range(512):
-                id = target[h, w]
-                try:
-                    trainId = id2trainId[id]
-                except:
-                    trainId = id2trainId[0]
-                target[h, w] = trainId
 
         #To tensor
         image = F.to_tensor(image)
         target = F.to_tensor(target) * 255
+        target = target.long()
         target = torch.squeeze(target, dim=0)
+
+        #Change labels in target to train ids
+        for h in range(256):
+            for w in range(256):
+                id = target[h, w].item()
+                try:
+                    trainId = id2trainId[str(id)]
+                except:
+                    trainId = id2trainId[str(0)]
+                target[h, w] = trainId
+
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
         target = torch.unsqueeze(target, dim=0)
 

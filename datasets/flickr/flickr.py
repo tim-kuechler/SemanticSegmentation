@@ -3,9 +3,8 @@ from torch.utils.data import Dataset
 import os
 from PIL import Image
 import numpy as np
-import json
 import torchvision.transforms.functional as F
-from random import seed, randint
+from random import randint
 
 
 class FLICKR(Dataset):
@@ -17,7 +16,7 @@ class FLICKR(Dataset):
     """
     def __init__(self, root=None, train=True):
         self.root = root
-        self.n_labels = 182
+        self.n_labels = 255
 
         if train:
             self.data_csv = './datasets/flickr/flickr_landscapes_train_split.txt'
@@ -56,7 +55,6 @@ class FLICKR(Dataset):
             target = F.resize(target, [int(image.size[1] * scale), int(image.size[0] * scale)], interpolation=F.InterpolationMode.BICUBIC)
 
         #Crop
-        seed(42)
         top = randint(0, image.size[1] - 256)
         left = randint(0, image.size[0] - 256)
         image = F.crop(image, top, left, 256, 256)
@@ -74,17 +72,3 @@ class FLICKR(Dataset):
     def __len__(self):
         return len(self.images)
 
-    def _load_json(self, path):
-        with open(path, 'r') as file:
-            data = json.load(file)
-        return data
-
-    def _get_target_suffix(self, mode, target_type):
-        if target_type == 'instance':
-            return '{}_instanceIds.png'.format(mode)
-        elif target_type == 'semantic':
-            return '{}_labelIds.png'.format(mode)
-        elif target_type == 'color':
-            return '{}_color.png'.format(mode)
-        else:
-            return '{}_polygons.json'.format(mode)
