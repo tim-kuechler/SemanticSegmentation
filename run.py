@@ -113,6 +113,8 @@ def train(config, workdir):
             if i==1: break
             model.eval()
             pred = model(img)
+
+            #Create dir for epoch
             this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
             Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
 
@@ -121,8 +123,8 @@ def train(config, workdir):
             image_grid = make_grid(img, nrow, padding=2)
             save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
+
             pred_color = torch.zeros((pred.shape[0], 3, pred.shape[2], pred.shape[3]), device=config.device)
-            #Save prediction as color image
             for N in range(0, pred.shape[0]):
                 for h in range(0, pred.shape[2]):
                     for w in range(0, pred.shape[3]):

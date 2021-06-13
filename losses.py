@@ -21,6 +21,7 @@ def _cross_entropy_soft(pred, soft_targets):
 def _cross_entropy_one_hot(pred, targets):
     targets = torch.argmax(targets, dim=1)
     cross_entr = nn.CrossEntropyLoss()
+    print(pred.size(), targets.size())
     return cross_entr(pred, Variable(targets))
 
 def get_loss_fn(config):
