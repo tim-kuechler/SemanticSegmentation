@@ -104,13 +104,11 @@ def train(config, workdir):
         if config.model.name == 'fcn':
             scheduler.step()
 
-        #Evalutate model accuracy
-        eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval)
-
         #Save some predictions
         i = 0
         for img, target in data_loader_eval:
-            if i==1: break
+            if i == 1:
+                break
             model.eval()
             pred = model(img)
             pred = torch.argmax(pred, dim=1)
@@ -129,7 +127,7 @@ def train(config, workdir):
             for N in range(0, pred.shape[0]):
                 for h in range(0, pred.shape[1]):
                     for w in range(0, pred.shape[1]):
-                        color = trainId2Color[str(pred[N, 0, h, w].item())]
+                        color = trainId2Color[str(pred[N, h, w].item())]
                         pred_color[N, 0, h, w] = color[0]
                         pred_color[N, 1, h, w] = color[1]
                         pred_color[N, 2, h, w] = color[2]
@@ -138,6 +136,9 @@ def train(config, workdir):
             save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
 
             i += 1
+
+        #Evalutate model accuracy
+        eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
