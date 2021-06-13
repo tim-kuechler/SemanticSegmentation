@@ -136,9 +136,11 @@ def train(config, workdir):
             save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
 
             i += 1
+        logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
-        eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval)
+        if epoch % config.training.full_eval_freq == 0:
+            eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
