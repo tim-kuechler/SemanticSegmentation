@@ -17,7 +17,6 @@ def get_config_unet():
     training.batch_size = 16
     training.log_freq = 100
     training.eval_freq = 2500
-    training.n_eval_imgs = 10
     training.checkpoint_save_freq = 15
 
     # Model
@@ -30,7 +29,6 @@ def get_config_unet():
     data.dataset = 'flickr'
     data.n_labels = 182
     data.n_channels = 3
-    data.image_size = 256
 
     # Optimization
     config.optim = optim = ml_collections.ConfigDict()
@@ -49,11 +47,10 @@ def get_config_fcn():
 
     # Training
     config.training = training = ml_collections.ConfigDict()
-    training.epochs = 100
+    training.epochs = 200
     training.batch_size = 16
     training.log_freq = 200
     training.eval_freq = 2500
-    training.n_eval_imgs = 10
     training.checkpoint_save_freq = 15
 
     # Model
@@ -62,10 +59,9 @@ def get_config_fcn():
 
     # Data
     config.data = data = ml_collections.ConfigDict()
-    data.dataset = 'flickr'
-    data.n_labels = 182
+    data.dataset = 'cityscapes256'
+    data.n_labels = 20
     data.n_channels = 3
-    data.image_size = 256
 
     # Optimization
     config.optim = optim = ml_collections.ConfigDict()

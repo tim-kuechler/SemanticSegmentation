@@ -11,6 +11,8 @@ import losses
 from torch.optim import lr_scheduler
 from models.fcn import fcn, vgg_net
 import numpy as np
+from torchvision.utils import make_grid, save_image
+from datasets.cityscapes256.cityscapes256 import trainId2Color
 
 
 def train(config, workdir):
@@ -40,8 +42,18 @@ def train(config, workdir):
     checkpoint_dir = os.path.join(workdir, 'checkpoints')
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
+    #Create pred image directory
+    pred_dir = os.path.join(workdir, 'pred_img')
+    Path(pred_dir).mkdir(parents=True, exist_ok=True)
+
+    #Create score dirs
+    score_dir = os.path.join(workdir, "scores")
+    Path(score_dir).mkdir(parents=True, exist_ok=True)
+    IU_scores = np.zeros((config.training.epochs, config.data.n_labels))
+    pixel_scores = np.zeros(config.training.epochs)
+
     #Get data iterators
-    data_loader_train, data_loader_eval = data_loader.get_dataset(config, train=True)
+    data_loader_train, data_loader_eval = data_loader.get_dataset(config)
     logging.info('Dataset initialized')
 
     #Get loss function
@@ -68,7 +80,7 @@ def train(config, workdir):
             if step % config.training.log_freq == 0:
                 logging.info('step: %d (epoch: %d), training_loss: %.5e' % (step, epoch, loss.item()))
 
-            #Evaluation of model
+            #Evaluation of model loss
             if step % config.training.eval_freq == 0:
                 model.eval()
                 tot_eval_loss = 0
@@ -86,50 +98,83 @@ def train(config, workdir):
         #Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
         if epoch % config.training.checkpoint_save_freq == 0:
-            utils.save_checkpoint(optimizer, model, epoch,
-                                  os.path.join(checkpoint_dir, f'checkpoint_{epoch}.pth'))
-        utils.save_checkpoint(optimizer, model, epoch,
-                              os.path.join(checkpoint_dir, 'curr_cpt.pth'))
+            utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, f'checkpoint_{epoch}.pth'))
+        utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, 'curr_cpt.pth'))
 
         #FCN scheduler step
         if config.model.name == 'fcn':
             scheduler.step()
 
+        #Evalutate model accuracy
+        eval(config, workdir, while_training=True)
+
+        #Save some predictions
+        i = 0
+        for img, target in data_loader_eval:
+            if i==1: break
+            model.eval()
+            pred = model(img)
+            this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
+            Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
+
+            #Save image
+            nrow = int(np.sqrt(img.shape[0]))
+            image_grid = make_grid(img, nrow, padding=2)
+            save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
+
+            pred_color = torch.zeros((pred.shape[0], 3, pred.shape[2], pred.shape[3]), device=config.device)
+            #Save prediction as color image
+            for N in range(0, pred.shape[0]):
+                for h in range(0, pred.shape[2]):
+                    for w in range(0, pred.shape[3]):
+                        color = trainId2Color[str(pred[N, 0, h, w].item())]
+                        pred_color[N, 0, h, w] = color[0]
+                        pred_color[N, 1, h, w] = color[1]
+                        pred_color[N, 2, h, w] = color[2]
+            nrow = int(np.sqrt(pred_color.shape[0]))
+            image_grid = make_grid(pred_color, nrow, padding=2)
+            save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
+
+            i += 1
+
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
         epoch += 1
 
-def eval(config, workdir):
-    #Load model
-    loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
-    if config.model.name == 'unet':
-        model = UNet(config.data.n_channels, config.data.n_labels)
-    elif config.model.name == 'fcn':
-        vgg_model = vgg_net.VGGNet()
-        model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
-    model = model.to(config.device)
-    model.load_state_dict(loaded_state['models'], strict=False)
-    logging.info('Model loaded')
 
-    # Get data iterators
-    data_loader_train, data_loader_eval = data_loader.get_dataset(config, train=False)
-    logging.info('Dataset initialized')
+def eval(config, workdir, while_training=False, model=None, data_loader_eval=None):
+    if not while_training:
+        #Load model
+        loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
+        if config.model.name == 'unet':
+            model = UNet(config.data.n_channels, config.data.n_labels)
+        elif config.model.name == 'fcn':
+            vgg_model = vgg_net.VGGNet()
+            model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
+        model = model.to(config.device)
+        model.load_state_dict(loaded_state['models'], strict=False)
+        logging.info('Model loaded')
+
+        # Get data iterators
+        data_loader_train, data_loader_eval = data_loader.get_dataset(config)
+        logging.info('Dataset initialized')
+    else:
+        assert model is not None
+        assert data_loader_eval is not None
+    model.eval()
 
     total_ious = []
     pixel_accs = []
     for img, target in data_loader_eval:
         img = img.to(config.device)
-        N, _, h, w = target.shape
 
         pred = model(img)
-        pred = pred.cpu().numpy()
-        pred = pred.transpose(0, 2, 3, 1).reshape(-1, config.data.n_labels).argmax(axis=1).reshape(N, h, w)
+        pred = torch.argmax(pred, dim=1).cpu().numpy()
 
-        target = target.cpu().numpy()
-        target = target.transpose(0, 2, 3, 1).reshape(-1, config.data.n_labels).argmax(axis=1).reshape(N, h, w)
+        target = torch.argmax(target, dim=1).cpu().numpy()
 
         for p, t in zip(pred, target):
-            total_ious.append(_iou(p, t))
+            total_ious.append(_iou(p, t, config))
             pixel_accs.append(_pixel_acc(p, t))
 
         total_ious = np.array(total_ious).transpose()  # n_class * val_len
@@ -138,7 +183,7 @@ def eval(config, workdir):
         print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
 
 
-# borrow functions and modify it from
+# borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
 # Calculates class intersections over unions
 def _iou(pred, target, config):
     ious = []

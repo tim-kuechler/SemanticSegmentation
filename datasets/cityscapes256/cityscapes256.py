@@ -9,6 +9,7 @@ import torch.nn.functional
 
 
 id2trainId = {}
+trainId2Color = {}
 Label = namedtuple('Label', [
                    'name',
                    'id',
@@ -87,7 +88,7 @@ class CITYSCAPES256(Dataset):
                 self.images.append(os.path.join(img_dir, file_name))
                 self.targets.append(os.path.join(target_dir, target_name))
 
-        # change id to class index
+        # change id to trainId
         id2trainId[str(0)] = 0  # add an void class
         for obj in labels:
             if obj.ignoreInEval:
@@ -95,6 +96,15 @@ class CITYSCAPES256(Dataset):
             idx = obj.trainId
             id = obj.id
             id2trainId[str(id)] = idx
+
+        # change trainId to color
+        trainId2Color[str(0)] = (0, 0, 0)  # add an void class
+        for obj in labels:
+            if obj.ignoreInEval:
+                continue
+            idx = obj.trainId
+            color = obj.color
+            trainId2Color[str(idx)] = color
 
     def __getitem__(self, index: int):
         """
