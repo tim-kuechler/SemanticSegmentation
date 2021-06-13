@@ -86,7 +86,7 @@ def train(config, workdir):
                 tot_eval_loss = 0
 
                 for eval_img, eval_target in data_loader_eval:
-                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device)
+                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
 
                     with torch.no_grad():
                         eval_pred = model(eval_img)
