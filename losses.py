@@ -19,10 +19,8 @@ def _cross_entropy_soft(pred, soft_targets):
     return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
 
 def _cross_entropy_one_hot(pred, targets):
-    print(pred.size(), targets.size())
     targets = torch.argmax(targets, dim=1)
     cross_entr = nn.CrossEntropyLoss()
-    print(pred.size(), targets.size())
     return cross_entr(pred, Variable(targets))
 
 def get_loss_fn(config):
@@ -52,6 +50,7 @@ def get_step_fn(config, model, optimizer, loss_fn, scaler=None):
         optimizer.zero_grad()
         with torch.cuda.amp.autocast():
             pred = model(img)
+            print(pred.size())
             loss = loss_fn(pred, target)
         scaler.scale(loss).backward()
         scaler.step(optimizer)
