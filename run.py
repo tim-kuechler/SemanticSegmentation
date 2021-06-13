@@ -94,7 +94,6 @@ def train(config, workdir):
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
-
         #Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
         if epoch % config.training.checkpoint_save_freq == 0:
