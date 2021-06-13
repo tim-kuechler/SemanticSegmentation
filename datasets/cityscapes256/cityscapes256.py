@@ -106,7 +106,7 @@ class CITYSCAPES256(Dataset):
             color = obj.color
             trainId2Color[str(idx)] = color
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index):
         """
         Args:
             index (int): Index
@@ -141,8 +141,11 @@ class CITYSCAPES256(Dataset):
                     trainId = id2trainId[str(0)]
                 target[h, w] = trainId
 
+        print("1", target.size())
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
+        print("2", target.size())
         target = torch.unsqueeze(target, dim=0)
+        print("3", target.size())
 
         return image, target
 
