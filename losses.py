@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 from torch.autograd import Variable
-import numpy as np
+import torch.nn.functional as F
 
 
 def get_optimizer(config, model):
@@ -24,7 +24,10 @@ def _cross_entropy_one_hot(pred, targets):
     return cross_entr(pred, Variable(targets))
 
 def get_loss_fn(config):
-    return _cross_entropy_one_hot
+    if config.model.name == 'unet':
+        return _cross_entropy_one_hot
+    elif config.model.name == 'fcn':
+        return F.binary_cross_entropy_with_logits
 
 def get_step_fn(config, model, optimizer, loss_fn, scaler=None):
     """
