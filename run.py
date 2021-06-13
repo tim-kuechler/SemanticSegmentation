@@ -179,10 +179,10 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             total_ious.append(_iou(p, t, config))
             pixel_accs.append(_pixel_acc(p, t))
 
-        total_ious = np.array(total_ious).transpose()  # n_class * val_len
-        ious = np.nanmean(total_ious, axis=1)
-        pixel_accs = np.array(pixel_accs).mean()
-        print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
+    total_ious = np.array(total_ious).transpose()  # n_class * val_len
+    ious = np.nanmean(total_ious, axis=1)
+    pixel_accs = np.array(pixel_accs).mean()
+    print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
