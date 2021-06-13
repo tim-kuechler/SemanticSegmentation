@@ -105,7 +105,7 @@ def train(config, workdir):
             scheduler.step()
 
         #Evalutate model accuracy
-        eval(config, workdir, while_training=True)
+        eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval)
 
         #Save some predictions
         i = 0
@@ -124,7 +124,7 @@ def train(config, workdir):
             image_grid = make_grid(img, nrow, padding=2)
             save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-
+            #Save prediction as color image
             pred_color = torch.zeros((pred.shape[0], 3, pred.shape[2], pred.shape[3]), device=config.device)
             for N in range(0, pred.shape[0]):
                 for h in range(0, pred.shape[2]):
