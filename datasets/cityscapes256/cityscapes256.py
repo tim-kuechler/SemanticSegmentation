@@ -139,6 +139,9 @@ class CITYSCAPES256(Dataset):
                     trainId = id2trainId[str(id)]
                 except:
                     trainId = id2trainId[str(0)]
+
+                if id == 7:
+                    print('7', id2trainId[str(id)])
                 target[h, w] = trainId
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
