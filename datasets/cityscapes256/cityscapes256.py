@@ -145,7 +145,7 @@ class CITYSCAPES256(Dataset):
                 target[h, w] = trainId
 
         # Save prediction as color image
-        pred_color = torch.zeros((1, 3, 256, 256)).long()
+        pred_color = torch.zeros((1, 3, 256, 256))
         for N in range(0, 1):
             for h in range(0, 256):
                 for w in range(0, 256):
@@ -153,9 +153,6 @@ class CITYSCAPES256(Dataset):
                     pred_color[N, 0, h, w] = color[0]
                     pred_color[N, 1, h, w] = color[1]
                     pred_color[N, 2, h, w] = color[2]
-
-                    if target[h, w].item() == 1:
-                        print(pred_color[N, 0, h, w], pred_color[N, 1, h, w], pred_color[N, 2, h, w])
         nrow = int(np.sqrt(pred_color.shape[0]))
         image_grid = make_grid(pred_color, nrow, padding=2, normalize=True)
         this_pred_dir = os.path.join('./output/bla', 'sample')
