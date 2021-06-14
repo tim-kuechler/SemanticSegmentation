@@ -101,14 +101,13 @@ def train(config, workdir):
             for N in range(0, target.shape[0]):
                 for h in range(0, target.shape[1]):
                     for w in range(0, target.shape[2]):
-                        print(trainId2Color[str(target[N, h, w].item())])
                         color = trainId2Color[str(target[N, h, w].item())]
                         mask_color[N, 0, h, w] = color[0]
                         mask_color[N, 1, h, w] = color[1]
                         mask_color[N, 2, h, w] = color[2]
             nrow = int(np.sqrt(mask_color.shape[0]))
             image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
-            save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
+            save_image(image_grid, os.path.join('./output/bla', 'mask.png'))
 
         #Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
