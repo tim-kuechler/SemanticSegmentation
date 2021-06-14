@@ -101,7 +101,7 @@ def train(config, workdir):
             for N in range(0, target.shape[0]):
                 for h in range(0, target.shape[1]):
                     for w in range(0, target.shape[2]):
-                        print(target[N, h, w].item())
+                        print(trainId2Color[str(target[N, h, w].item())])
                         color = trainId2Color[str(target[N, h, w].item())]
                         mask_color[N, 0, h, w] = color[0]
                         mask_color[N, 1, h, w] = color[1]
