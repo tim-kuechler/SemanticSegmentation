@@ -94,6 +94,8 @@ def train(config, workdir):
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
+            target = torch.argmax(target, dim=1)
+            print(target.size())
             #Save mask as color image
             mask_color = torch.zeros((target.shape[0], 3, target.shape[1], target.shape[2]), device=config.device)
             for N in range(0, target.shape[0]):
