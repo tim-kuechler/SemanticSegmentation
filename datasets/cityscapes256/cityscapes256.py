@@ -118,10 +118,10 @@ class CITYSCAPES256(Dataset):
         """
         #Load and resize
         image = Image.open(self.images[index]).convert('RGB')
-        image = F.resize(image, [256, 512], interpolation=F.InterpolationMode.BICUBIC)
+        image = F.resize(image, [256, 512], interpolation=F.InterpolationMode.LANCZOS)
 
         target = Image.open(self.targets[index])
-        target = F.resize(target, [256, 512], interpolation=F.InterpolationMode.BICUBIC)
+        target = F.resize(target, [256, 512], interpolation=F.InterpolationMode.LANCZOS)
 
         #Crop
         left = randint(0, 256)
