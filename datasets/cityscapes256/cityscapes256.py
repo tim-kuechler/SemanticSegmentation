@@ -6,6 +6,9 @@ from collections import namedtuple
 import torchvision.transforms.functional as F
 from random import randint
 import torch.nn.functional
+import numpy as np
+from torchvision.utils import make_grid, save_image
+from pathlib import Path
 
 
 id2trainId = {}
@@ -139,10 +142,22 @@ class CITYSCAPES256(Dataset):
                     trainId = id2trainId[str(id)]
                 except:
                     trainId = id2trainId[str(0)]
-
-                if id == 7:
-                    print('7', id2trainId[str(id)])
                 target[h, w] = trainId
+
+        # Save prediction as color image
+        pred_color = torch.zeros((1, 3, 256, 256), device='cuda')
+        for N in range(0, 1):
+            for h in range(0, 256):
+                for w in range(0, 256):
+                    color = trainId2Color[str(target[h, w].item())]
+                    pred_color[N, 0, h, w] = color[0]
+                    pred_color[N, 1, h, w] = color[1]
+                    pred_color[N, 2, h, w] = color[2]
+        nrow = int(np.sqrt(pred_color.shape[0]))
+        image_grid = make_grid(pred_color, nrow, padding=2)
+        this_pred_dir = os.path.join('./output/bla', 'sample')
+        Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
+        save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
 
