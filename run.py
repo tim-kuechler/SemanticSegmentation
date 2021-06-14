@@ -112,6 +112,7 @@ def train(config, workdir):
             model.eval()
             pred = model(img)
             pred = torch.argmax(pred, dim=1)
+            target = torch.argmax(target, dim=1)
 
             #Create dir for epoch
             this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
@@ -132,8 +133,21 @@ def train(config, workdir):
                         pred_color[N, 1, h, w] = color[1]
                         pred_color[N, 2, h, w] = color[2]
             nrow = int(np.sqrt(pred_color.shape[0]))
-            image_grid = make_grid(pred_color, nrow, padding=2)
+            image_grid = make_grid(pred_color, nrow, padding=2, normalize=True)
             save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
+
+            #Save mask as color image
+            mask_color = torch.zeros((pred.shape[0], 3, pred.shape[1], pred.shape[2]), device=config.device)
+            for N in range(0, pred.shape[0]):
+                for h in range(0, pred.shape[1]):
+                    for w in range(0, pred.shape[1]):
+                        color = trainId2Color[str(target[N, h, w].item())]
+                        mask_color[N, 0, h, w] = color[0]
+                        mask_color[N, 1, h, w] = color[1]
+                        mask_color[N, 2, h, w] = color[2]
+            nrow = int(np.sqrt(mask_color.shape[0]))
+            image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
+            save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
 
             i += 1
         logging.info(f'Images for epoch {epoch} saved')
