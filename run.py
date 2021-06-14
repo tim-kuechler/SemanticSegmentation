@@ -95,7 +95,6 @@ def train(config, workdir):
                 model.train()
 
             target = torch.argmax(target, dim=1)
-            print(target.size())
             #Save mask as color image
             mask_color = torch.zeros((target.shape[0], 3, target.shape[1], target.shape[2]), device=config.device)
             for N in range(0, target.shape[0]):
@@ -107,7 +106,9 @@ def train(config, workdir):
                         mask_color[N, 2, h, w] = color[2]
             nrow = int(np.sqrt(mask_color.shape[0]))
             image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
-            save_image(image_grid, os.path.join('./output/bla', 'mask.png'))
+            this_pred_dir = os.path.join('./output/bla', 'sample')
+            Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
+            save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
 
         #Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
@@ -122,6 +123,7 @@ def train(config, workdir):
         #Save some predictions
         i = 0
         for img, target in data_loader_eval:
+            img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
             if i == 1:
                 break
             model.eval()
