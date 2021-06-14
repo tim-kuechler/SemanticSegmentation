@@ -145,7 +145,7 @@ class CITYSCAPES256(Dataset):
                 target[h, w] = trainId
 
         # Save prediction as color image
-        pred_color = torch.zeros((1, 3, 256, 256), device='cuda')
+        pred_color = torch.zeros((1, 3, 256, 256))
         for N in range(0, 1):
             for h in range(0, 256):
                 for w in range(0, 256):
