@@ -150,7 +150,7 @@ class CITYSCAPES256(Dataset):
             for h in range(0, 256):
                 for w in range(0, 256):
                     if target[h, w].item() == 1:
-                        print('TETE')
+                        print(trainId2Color[str(target[h, w].item())])
                     color = trainId2Color[str(target[h, w].item())]
                     pred_color[N, 0, h, w] = color[0]
                     pred_color[N, 1, h, w] = color[1]
