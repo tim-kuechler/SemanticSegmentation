@@ -127,7 +127,7 @@ def train(config, workdir):
             pred_color = torch.zeros((pred.shape[0], 3, pred.shape[1], pred.shape[2]), device=config.device)
             for N in range(0, pred.shape[0]):
                 for h in range(0, pred.shape[1]):
-                    for w in range(0, pred.shape[1]):
+                    for w in range(0, pred.shape[2]):
                         color = trainId2Color[str(pred[N, h, w].item())]
                         pred_color[N, 0, h, w] = color[0]
                         pred_color[N, 1, h, w] = color[1]
@@ -137,14 +137,15 @@ def train(config, workdir):
             save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
 
             #Save mask as color image
-            mask_color = torch.zeros((pred.shape[0], 3, pred.shape[1], pred.shape[2]), device=config.device)
-            for N in range(0, pred.shape[0]):
-                for h in range(0, pred.shape[1]):
-                    for w in range(0, pred.shape[1]):
+            mask_color = torch.zeros((target.shape[0], 3, target.shape[1], target.shape[2]), device=config.device)
+            for N in range(0, target.shape[0]):
+                for h in range(0, target.shape[1]):
+                    for w in range(0, target.shape[2]):
                         color = trainId2Color[str(target[N, h, w].item())]
                         mask_color[N, 0, h, w] = color[0]
                         mask_color[N, 1, h, w] = color[1]
                         mask_color[N, 2, h, w] = color[2]
+                        print(color)
             nrow = int(np.sqrt(mask_color.shape[0]))
             image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
             save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
