@@ -94,6 +94,20 @@ def train(config, workdir):
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
+            #Save mask as color image
+            mask_color = torch.zeros((target.shape[0], 3, target.shape[1], target.shape[2]), device=config.device)
+            for N in range(0, target.shape[0]):
+                for h in range(0, target.shape[1]):
+                    for w in range(0, target.shape[2]):
+                        print(target[N, h, w].item())
+                        color = trainId2Color[str(target[N, h, w].item())]
+                        mask_color[N, 0, h, w] = color[0]
+                        mask_color[N, 1, h, w] = color[1]
+                        mask_color[N, 2, h, w] = color[2]
+            nrow = int(np.sqrt(mask_color.shape[0]))
+            image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
+            save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
+
         #Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
         if epoch % config.training.checkpoint_save_freq == 0:
@@ -135,20 +149,6 @@ def train(config, workdir):
             nrow = int(np.sqrt(pred_color.shape[0]))
             image_grid = make_grid(pred_color, nrow, padding=2, normalize=True)
             save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
-
-            #Save mask as color image
-            mask_color = torch.zeros((target.shape[0], 3, target.shape[1], target.shape[2]), device=config.device)
-            for N in range(0, target.shape[0]):
-                for h in range(0, target.shape[1]):
-                    for w in range(0, target.shape[2]):
-                        color = trainId2Color[str(target[N, h, w].item())]
-                        mask_color[N, 0, h, w] = color[0]
-                        mask_color[N, 1, h, w] = color[1]
-                        mask_color[N, 2, h, w] = color[2]
-                        print(color)
-            nrow = int(np.sqrt(mask_color.shape[0]))
-            image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
-            save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
 
             i += 1
         logging.info(f'Images for epoch {epoch} saved')
