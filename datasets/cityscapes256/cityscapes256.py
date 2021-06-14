@@ -157,7 +157,7 @@ class CITYSCAPES256(Dataset):
                     if target[h, w].item() == 1:
                         print(pred_color[N, 0, h, w], pred_color[N, 1, h, w], pred_color[N, 2, h, w])
         nrow = int(np.sqrt(pred_color.shape[0]))
-        image_grid = make_grid(pred_color, nrow, padding=2)
+        image_grid = make_grid(pred_color, nrow, padding=2, normalize=True)
         this_pred_dir = os.path.join('./output/bla', 'sample')
         Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
         save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
