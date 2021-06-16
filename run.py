@@ -16,17 +16,16 @@ import torch.nn.functional as F
 
 
 def train(config, workdir):
-    noise = torch.tensor([1, 2, 3])
-    print(noise.size())
+    a = torch.tensor([[[[1, 1], [1, 1]], [[2, 2], [2, 2]]]])
+    print(a.size())
+    print(a)
+
+    noise = torch.tensor([5])
     noise = torch.unsqueeze(noise, -1)
-    print(noise.size())
     noise = torch.unsqueeze(noise, -1)
-    print(noise.size())
-    noise = noise.expand(3, 1, 5)
-    print(noise.size())
+    noise = noise.expand(1, 1, 2)
     noise = torch.unsqueeze(noise, -1)
-    noise = noise.expand(3, 1, 5, 5)
-    print(noise.size())
+    noise = noise.expand(1, 1, 2, 2)
     print(noise[0, 0, :, :])
 
     print(noise.size())
