@@ -1,4 +1,5 @@
 """FCN model. Modified from https://github.com/pochih/FCN-pytorch"""
+import torch
 import torch.nn as nn
 
 
@@ -20,7 +21,9 @@ class FCNs(nn.Module):
         self.bn5     = nn.BatchNorm2d(32)
         self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
 
-    def forward(self, x):
+    def forward(self, x, noise):
+        noise = noise.expand((x.shape[0], 1, x.shape[2], x.shape[3]))
+
         output = self.pretrained_net(x)
         x5 = output['x5']  # size=(N, 512, x.H/32, x.W/32)
         x4 = output['x4']  # size=(N, 512, x.H/16, x.W/16)
