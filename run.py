@@ -99,19 +99,19 @@ def train(config, workdir):
             if step % config.training.log_freq == 0:
                 logging.info('step: %d (epoch: %d), training_loss: %.5e' % (step, epoch, loss.item()))
 
-            #Evaluation of model loss
-            if step % config.training.eval_freq == 0:
-                model.eval()
-                tot_eval_loss = 0
-
-                for eval_img, eval_target in data_loader_eval:
-                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
-
-                    with torch.no_grad():
-                        eval_pred = model(eval_img)
-                    tot_eval_loss += loss_fn(eval_pred, eval_target).item()
-                logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
-                model.train()
+            # #Evaluation of model loss
+            # if step % config.training.eval_freq == 0:
+            #     model.eval()
+            #     tot_eval_loss = 0
+            #
+            #     for eval_img, eval_target in data_loader_eval:
+            #         eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
+            #
+            #         with torch.no_grad():
+            #             eval_pred = model(eval_img)
+            #         tot_eval_loss += loss_fn(eval_pred, eval_target).item()
+            #     logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
+            #     model.train()
 
         # Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
@@ -124,37 +124,38 @@ def train(config, workdir):
             scheduler.step()
 
         # Save some predictions
-        for i, (img, target) in enumerate(data_loader_eval):
-            img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
-            if i == 1:
-                break
-            model.eval()
+        if epoch % config.training.save_pred_freq == 0:
+            for i, (img, target) in enumerate(data_loader_eval):
+                img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
+                if i == 1:
+                    break
+                model.eval()
 
-            # Conditioning on noise scales
-            if config.training.conditional:
-                eps = 1e-5
-                t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
-                z = torch.randn_like(img)
-                mean, std = sde.marginal_prob(img, t)
-                perturbed_img = mean + std[:, None, None, None] * z
+                # Conditioning on noise scales
+                if config.training.conditional:
+                    eps = 1e-5
+                    t = torch.linspace(1, eps, img.shape[0], device=config.device)
+                    z = torch.randn_like(img)
+                    mean, std = sde.marginal_prob(img, t)
+                    perturbed_img = mean + std[:, None, None, None] * z
 
-            pred = model(img) if not config.training.conditional else model(perturbed_img, std)
-            pred = torch.argmax(pred, dim=1)
-            target = torch.argmax(target, dim=1)
+                pred = model(img) if not config.training.conditional else model(perturbed_img, std)
+                pred = torch.argmax(pred, dim=1)
+                target = torch.argmax(target, dim=1)
 
-            # Create dir for epoch
-            this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
-            Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
+                # Create dir for epoch
+                this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
+                Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
 
-            # Save image
-            nrow = int(np.sqrt(img.shape[0]))
-            image_grid = make_grid(img, nrow, padding=2)
-            save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
+                # Save image
+                nrow = int(np.sqrt(img.shape[0]))
+                image_grid = make_grid(img, nrow, padding=2)
+                save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-            # Save prediction and original mask as color image
-            _save_map(pred, this_pred_dir, 'pred.png')
-            _save_map(target, this_pred_dir, 'mask.png')
-        logging.info(f'Images for epoch {epoch} saved')
+                # Save prediction and original map as color image
+                _save_map(pred, this_pred_dir, 'pred.png')
+                _save_map(target, this_pred_dir, 'mask.png')
+            logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
