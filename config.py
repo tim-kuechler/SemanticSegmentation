@@ -54,6 +54,7 @@ def get_config_fcn():
     training.eval_freq = 1000
     training.full_eval_freq = 10
     training.checkpoint_save_freq = 15
+    training.sde = 'vesde'
 
     # Model
     config.model = model = ml_collections.ConfigDict()
