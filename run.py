@@ -17,33 +17,34 @@ import sde_lib
 
 
 def train(config, workdir):
-    #Create eval directory
+    # Create eval directory
     eval_dir = os.path.join(workdir, 'eval')
     Path(eval_dir).mkdir(parents=True, exist_ok=True)
 
-    #Initialize model and optimizer
+    # Initialize model and optimizer
     if config.model.name == 'unet':
         model = UNet(config)
     elif config.model.name == 'fcn':
-        assert config.data.n_channels == 3
+        assert config.training.conditional == False, "FCN can only be trained unconditionally"
+        assert config.data.n_channels == 3, "FCN can only be trained on 3 channel images"
         vgg_model = vgg_net.VGGNet()
         model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
         vgg_model.to(config.device)
     model = model.to(config.device)
     model = nn.DataParallel(model)
 
-    #Get optimizer
+    # Get optimizer
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
     epoch = 1
     logging.info('Model and optimizer initialized')
 
-    #Create checkpoint directories
+    # Create checkpoint directories
     checkpoint_dir = os.path.join(workdir, 'checkpoints')
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
-    #Create pred image directory
+    # Create pred image directory
     pred_dir = os.path.join(workdir, 'pred_img')
     Path(pred_dir).mkdir(parents=True, exist_ok=True)
 
@@ -76,8 +77,10 @@ def train(config, workdir):
                 t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
+                print(std)
                 perturbed_img = mean + std[:, None, None, None] * z
                 noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
+                print(noise)
 
             #Training step
             optimizer.zero_grad()
@@ -113,19 +116,18 @@ def train(config, workdir):
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
-        #Save the checkpoint.
+        # Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
         if epoch % config.training.checkpoint_save_freq == 0:
             utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, f'checkpoint_{epoch}.pth'))
         utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, 'curr_cpt.pth'))
 
-        #FCN scheduler step
+        # FCN scheduler step
         if config.model.name == 'fcn':
             scheduler.step()
 
-        #Save some predictions
-        i = 0
-        for img, target in data_loader_eval:
+        # Save some predictions
+        for i, (img, target) in enumerate(data_loader_eval):
             img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
             if i == 1:
                 break
@@ -144,42 +146,18 @@ def train(config, workdir):
             pred = torch.argmax(pred, dim=1)
             target = torch.argmax(target, dim=1)
 
-            #Create dir for epoch
+            # Create dir for epoch
             this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
             Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
 
-            #Save image
+            # Save image
             nrow = int(np.sqrt(img.shape[0]))
             image_grid = make_grid(img, nrow, padding=2)
             save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-            #Save prediction as color image
-            pred_color = torch.zeros((pred.shape[0], 3, pred.shape[1], pred.shape[2]), device=config.device)
-            for N in range(0, pred.shape[0]):
-                for h in range(0, pred.shape[1]):
-                    for w in range(0, pred.shape[2]):
-                        color = trainId2Color[str(pred[N, h, w].item())]
-                        pred_color[N, 0, h, w] = color[0]
-                        pred_color[N, 1, h, w] = color[1]
-                        pred_color[N, 2, h, w] = color[2]
-            nrow = int(np.sqrt(pred_color.shape[0]))
-            image_grid = make_grid(pred_color, nrow, padding=2, normalize=True)
-            save_image(image_grid, os.path.join(this_pred_dir, 'pred.png'))
-
-            #Save mask as color image
-            mask_color = torch.zeros((target.shape[0], 3, target.shape[1], target.shape[2]), device=config.device)
-            for N in range(0, target.shape[0]):
-                for h in range(0, target.shape[1]):
-                    for w in range(0, target.shape[2]):
-                        color = trainId2Color[str(target[N, h, w].item())]
-                        mask_color[N, 0, h, w] = color[0]
-                        mask_color[N, 1, h, w] = color[1]
-                        mask_color[N, 2, h, w] = color[2]
-            nrow = int(np.sqrt(mask_color.shape[0]))
-            image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
-            save_image(image_grid, os.path.join(this_pred_dir, 'mask.png'))
-
-            i += 1
+            # Save prediction and original mask as color image
+            _save_map(pred, this_pred_dir, 'pred.png')
+            _save_map(target, this_pred_dir, 'mask.png')
         logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
@@ -193,7 +171,7 @@ def train(config, workdir):
 
 def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None):
     if not while_training:
-        #Load model
+        # Load model
         loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
         if config.model.name == 'unet':
             model = UNet(config)
@@ -247,8 +225,14 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
-# Calculates class intersections over unions
 def _iou(pred, target, config):
+    """ Calculates class intersections over unions
+
+    :param pred: The predicted map
+    :param target: The targed segmentation map
+    :param config: The config
+    :return: Iou
+    """
     ious = []
     for cls in range(config.data.n_labels):
         pred_inds = pred == cls
@@ -263,6 +247,32 @@ def _iou(pred, target, config):
 
 
 def _pixel_acc(pred, target):
+    """ Calculate pixel accuracy of prediction in comparison to original map
+
+    :param pred:
+    :param target:
+    :return: pixel accuracy
+    """
     correct = (pred == target).sum()
     total = (target == target).sum()
     return correct / total
+
+def _save_map(map, filename, save_dir):
+    """
+    Saves a segmentation map as color image
+
+    :param mask: A mask in format (N, H, W) (not one-hot!)
+    :param filename: The name of the image file
+    :param save_dir: The directory to save to
+    """
+    mask_color = torch.zeros((map.shape[0], 3, map.shape[1], map.shape[2]))
+    for N in range(0, map.shape[0]):
+        for h in range(0, map.shape[1]):
+            for w in range(0, map.shape[2]):
+                color = trainId2Color[str(map[N, h, w].item())]
+                mask_color[N, 0, h, w] = color[0]
+                mask_color[N, 1, h, w] = color[1]
+                mask_color[N, 2, h, w] = color[2]
+    nrow = int(np.sqrt(mask_color.shape[0]))
+    image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
+    save_image(image_grid, os.path.join(save_dir, filename))
