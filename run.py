@@ -23,8 +23,7 @@ def train(config, workdir):
 
     #Initialize model and optimizer
     if config.model.name == 'unet':
-        model = UNet(config.data.n_channels + (1 if config.training.conditional else 0),
-                     config.data.n_labels)
+        model = UNet(config)
     elif config.model.name == 'fcn':
         assert config.data.n_channels == 3
         vgg_model = vgg_net.VGGNet()
@@ -197,8 +196,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         #Load model
         loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
         if config.model.name == 'unet':
-            model = UNet(config.data.n_channels + (1 if config.training.conditional else 0),
-                         config.data.n_labels)
+            model = UNet(config)
         elif config.model.name == 'fcn':
             vgg_model = vgg_net.VGGNet()
             model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
