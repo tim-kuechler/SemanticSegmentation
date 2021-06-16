@@ -123,7 +123,16 @@ def train(config, workdir):
             if i == 1:
                 break
             model.eval()
-            pred = model(img)
+
+            # Conditioning on noise scales
+            eps = 1e-5
+            t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
+            z = torch.randn_like(img)
+            mean, std = sde.marginal_prob(img, t)
+            perturbed_img = mean + std[:, None, None, None] * z
+            noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
+
+            pred = model(perturbed_img, noise)
             pred = torch.argmax(pred, dim=1)
             target = torch.argmax(target, dim=1)
 

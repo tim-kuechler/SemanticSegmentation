@@ -6,7 +6,7 @@ def get_config(dataset):
     if dataset == 'flickr':
         return get_config_unet()
     elif dataset == 'cityscapes':
-        return get_config_fcn()
+        return get_config_cityscapes()
 
 def get_config_unet():
     config = ml_collections.ConfigDict()
@@ -43,7 +43,7 @@ def get_config_unet():
 
     return config
 
-def get_config_fcn():
+def get_config_cityscapes():
     config = ml_collections.ConfigDict()
 
     # Training
