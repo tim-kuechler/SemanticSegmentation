@@ -42,7 +42,7 @@ class GaussianFourierProjection(nn.Module):
         return torch.cat([torch.sin(x_proj), torch.cos(x_proj)], dim=-1)
 
 class FCNs(nn.Module):
-    def __init__(self, pretrained_net, n_class, nf, fourier_scale):
+    def __init__(self, pretrained_net, n_class, nf=128, fourier_scale=16):
         super().__init__()
         self.n_class = n_class
         self.pretrained_net = pretrained_net
