@@ -58,7 +58,8 @@ def get_config_fcn():
 
     # Model
     config.model = model = ml_collections.ConfigDict()
-    model.name = 'fcn'
+    model.sigma_min = 0.01
+    model.sigma_max = 380
 
     # Data
     config.data = data = ml_collections.ConfigDict()
