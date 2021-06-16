@@ -18,7 +18,13 @@ import torch.nn.functional as F
 def train(config, workdir):
     noise = torch.tensor([1, 2, 3])
     print(noise.size())
-    noise = noise.expand((-1, 1, 5, 5))
+    noise = torch.unsqueeze(noise, -1)
+    print(noise.size())
+    noise = torch.unsqueeze(noise, -1)
+    print(noise.size())
+    noise = noise.expand(3, 1, 10)
+    print(noise.size())
+
     print(noise.size())
 
     #Create eval directory
