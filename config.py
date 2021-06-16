@@ -2,10 +2,10 @@ import ml_collections
 import torch
 
 
-def get_config(model):
-    if model == 'unet':
+def get_config(dataset):
+    if dataset == 'flickr':
         return get_config_unet()
-    elif model == 'fcn':
+    elif dataset == 'cityscapes':
         return get_config_fcn()
 
 def get_config_unet():

@@ -19,8 +19,8 @@ def get_parser(**parser_kwargs):
         help='Work folder',
     )
     parser.add_argument(
-        'model',
-        help='fcn or unet',
+        'dataset',
+        help='cityscapes or flickr',
     )
     parser.add_argument(
         'mode',
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 
     #Load config
-    config = config.get_config(args.model)
+    config = config.get_config(args.dataset)
 
     if args.mode == 'train':
         run.train(config, os.path.join('output', args.workdir))
