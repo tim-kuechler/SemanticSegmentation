@@ -24,6 +24,7 @@ def train(config, workdir):
     print(noise.size())
     noise = noise.expand(3, 1, 10)
     print(noise.size())
+    print(noise)
 
     print(noise.size())
 
