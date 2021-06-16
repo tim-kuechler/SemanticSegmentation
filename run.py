@@ -27,7 +27,7 @@ def train(config, workdir):
     noise = torch.unsqueeze(noise, -1)
     noise = noise.expand(3, 1, 5, 5)
     print(noise.size())
-    print(noise)
+    print(noise[0, 0, :, :])
 
     print(noise.size())
 
