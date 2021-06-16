@@ -77,21 +77,18 @@ def train(config, workdir):
                 t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
-                print(std)
                 perturbed_img = mean + std[:, None, None, None] * z
-                noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
-                print(noise)
 
             #Training step
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
-                pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
+                pred = model(img) if not config.training.conditional else model(perturbed_img, std)
                 loss = loss_fn(pred, target)
                 loss.backward()
                 optimizer.step()
             else:
                 with torch.cuda.amp.autocast():
-                    pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
+                    pred = model(img) if not config.training.conditional else model(perturbed_img, std)
                     loss = loss_fn(pred, target)
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
@@ -140,9 +137,8 @@ def train(config, workdir):
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
-                noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
 
-            pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
+            pred = model(img) if not config.training.conditional else model(perturbed_img, std)
             pred = torch.argmax(pred, dim=1)
             target = torch.argmax(target, dim=1)
 
