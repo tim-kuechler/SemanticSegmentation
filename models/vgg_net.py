@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 class VGGNet(VGG):
-    def __init__(self, pretrained=True, show_params=False):
+    def __init__(self, pretrained=True):
         super().__init__(make_layers())
         self.ranges = ((0, 5), (5, 10), (10, 17), (17, 24), (24, 31))
 
@@ -13,10 +13,6 @@ class VGGNet(VGG):
             self.load_state_dict(models.vgg16(pretrained=True).state_dict())
 
         del self.classifier
-
-        if show_params:
-            for name, param in self.named_parameters():
-                print(name, param.size())
 
     def forward(self, x):
         output = {}
@@ -32,7 +28,7 @@ class VGGNet(VGG):
 def make_layers(batch_norm=False):
     cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
     layers = []
-    in_channels = 4
+    in_channels = 3
     for v in cfg:
         if v == 'M':
             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
