@@ -26,9 +26,11 @@ def train(config, workdir):
     noise = noise.expand(1, 1, 2)
     noise = torch.unsqueeze(noise, -1)
     noise = noise.expand(1, 1, 2, 2)
-    print(noise[0, 0, :, :])
-
     print(noise.size())
+
+    a = torch.cat([a, noise], dim=1)
+    print(a.size())
+    print(a)
 
     #Create eval directory
     eval_dir = os.path.join(workdir, 'eval')
