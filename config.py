@@ -18,6 +18,7 @@ def get_config_unet():
     training.log_freq = 100
     training.eval_freq = 2500
     training.checkpoint_save_freq = 15
+    training.sde = 'vesde'
 
     # Model
     config.model = model = ml_collections.ConfigDict()
