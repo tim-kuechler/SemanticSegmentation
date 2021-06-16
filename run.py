@@ -16,22 +16,6 @@ import torch.nn.functional as F
 
 
 def train(config, workdir):
-    a = torch.tensor([[[[1, 1], [1, 1]], [[2, 2], [2, 2]]]])
-    print(a.size())
-    print(a)
-
-    noise = torch.tensor([5])
-    noise = torch.unsqueeze(noise, -1)
-    noise = torch.unsqueeze(noise, -1)
-    noise = noise.expand(1, 1, 2)
-    noise = torch.unsqueeze(noise, -1)
-    noise = noise.expand(1, 1, 2, 2)
-    print(noise.size())
-
-    a = torch.cat([a, noise], dim=1)
-    print(a.size())
-    print(a)
-
     #Create eval directory
     eval_dir = os.path.join(workdir, 'eval')
     Path(eval_dir).mkdir(parents=True, exist_ok=True)

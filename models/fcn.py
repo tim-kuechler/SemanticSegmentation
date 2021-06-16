@@ -22,7 +22,13 @@ class FCNs(nn.Module):
         self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
 
     def forward(self, x, noise):
-        noise = noise.expand((x.shape[0], 1, x.shape[2], x.shape[3]))
+        # Combine x and noise
+        noise = torch.unsqueeze(noise, -1)
+        noise = torch.unsqueeze(noise, -1)
+        noise = noise.expand(noise.shape[0], 1, x.shape[2])
+        noise = torch.unsqueeze(noise, -1)
+        noise = noise.expand(noise.shape[0], 1, x.shape[2], x.shape[3])
+        x = torch.cat([x, noise], dim=1)
 
         output = self.pretrained_net(x)
         x5 = output['x5']  # size=(N, 512, x.H/32, x.W/32)
