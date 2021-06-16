@@ -61,6 +61,7 @@ def get_config_cityscapes():
     model.sigma_min = 0.01
     model.sigma_max = 380
     model.num_scales = 2000
+    model.name = 'unet'
 
     # Data
     config.data = data = ml_collections.ConfigDict()

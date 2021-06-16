@@ -1,5 +1,4 @@
 """FCN model. Modified from https://github.com/pochih/FCN-pytorch"""
-import torch
 import torch.nn as nn
 import numpy as np
 
@@ -85,12 +84,16 @@ class FCNs(nn.Module):
         self.bn5     = nn.BatchNorm2d(32)
         self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
 
+<<<<<<< HEAD:models/fcn.py
     def forward(self, x, noise):
         # Gaussian Fourier features embeddings.
         temb = self.gaussian(torch.log(noise))
         temb = self.lin1(temb)
         temb = self.lin2(self.act(temb))
 
+=======
+    def forward(self, x):
+>>>>>>> parent of 4fa5f5f (Change to time embedding):models/fcn/fcn.py
         output = self.pretrained_net(x)
         x5 = output['x5']  # size=(N, 512, x.H/32, x.W/32)
         x4 = output['x4']  # size=(N, 512, x.H/16, x.W/16)

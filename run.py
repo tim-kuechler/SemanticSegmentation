@@ -2,17 +2,17 @@ import torch
 import torch.nn as nn
 import os
 from pathlib import Path
-import torch.optim as optim
+from models.unet.unet import UNet
 import datasets.datasets as data_loader
 import logging
 import time
-from models import utils, vgg_net, fcn
-import sde_lib
+from models import utils
+import losses
 from torch.optim import lr_scheduler
+from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
 from datasets.cityscapes256.cityscapes256 import trainId2Color
-import torch.nn.functional as F
 
 
 def train(config, workdir):
@@ -21,16 +21,20 @@ def train(config, workdir):
     Path(eval_dir).mkdir(parents=True, exist_ok=True)
 
     #Initialize model and optimizer
-    vgg_model = vgg_net.VGGNet()
-    model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
-    vgg_model.to(config.device)
+    if config.model.name == 'unet':
+        model = UNet(config.data.n_channels, config.data.n_labels)
+    elif config.model.name == 'fcn':
+        assert config.data.n_channels == 3
+        vgg_model = vgg_net.VGGNet()
+        model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
+        vgg_model.to(config.device)
     model = model.to(config.device)
     model = nn.DataParallel(model)
 
     #Get optimizer
-    optimizer = optim.RMSprop(model.parameters(), lr=config.optim.lr, momentum=config.optim.momentum,
-                                  weight_decay=config.optim.weight_decay)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
+    optimizer = losses.get_optimizer(config, model)
+    if config.model.name == 'fcn':
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
     epoch = 1
     logging.info('Model and optimizer initialized')
 
@@ -42,19 +46,22 @@ def train(config, workdir):
     pred_dir = os.path.join(workdir, 'pred_img')
     Path(pred_dir).mkdir(parents=True, exist_ok=True)
 
+    #Create score dirs
+    score_dir = os.path.join(workdir, "scores")
+    Path(score_dir).mkdir(parents=True, exist_ok=True)
+    IU_scores = np.zeros((config.training.epochs, config.data.n_labels))
+    pixel_scores = np.zeros(config.training.epochs)
+
     #Get data iterators
     data_loader_train, data_loader_eval = data_loader.get_dataset(config)
     logging.info('Dataset initialized')
 
-    #Get SDE
-    sde = sde_lib.get_SDE(config)
-    logging.info('SDE initialized')
-
     #Get loss function
-    loss_fn = F.binary_cross_entropy_with_logits
+    loss_fn = losses.get_loss_fn(config)
 
-    #Scaler for mixed precision
+    #Get step function
     scaler = None if not config.optim.mixed_prec else torch.cuda.amp.GradScaler()
+    step_fn = losses.get_step_fn(config, model, optimizer, loss_fn, scaler)
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -65,28 +72,8 @@ def train(config, workdir):
         for img, target in data_loader_train:
             img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
 
-            #Conditioning on noise scales
-            eps = 1e-5
-            t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
-            z = torch.randn_like(img)
-            mean, std = sde.marginal_prob(img, t)
-            perturbed_img = mean + std[:, None, None, None] * z
-            noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
-
             #Training step
-            optimizer.zero_grad()
-            if not config.optim.mixed_prec:
-                pred = model(perturbed_img, noise)
-                loss = loss_fn(pred, target)
-                loss.backward()
-                optimizer.step()
-            else:
-                with torch.cuda.amp.autocast():
-                    pred = model(perturbed_img, noise)
-                    loss = loss_fn(pred, target)
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+            loss = step_fn(img, target)
             step += 1
 
             #Report training loss
@@ -114,7 +101,8 @@ def train(config, workdir):
         utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, 'curr_cpt.pth'))
 
         #FCN scheduler step
-        scheduler.step()
+        if config.model.name == 'fcn':
+            scheduler.step()
 
         #Save some predictions
         i = 0
