@@ -72,11 +72,15 @@ def get_config_cityscapes():
 
     # Optimization
     config.optim = optim = ml_collections.ConfigDict()
-    optim.weight_decay = 1e-5
-    optim.lr = 1e-4
-    optim.momentum = 0.
-    optim.gamma = 0.5
-    optim.step_size = 30
+    optim.weight_decay = 0
+    optim.lr = 2e-4
+    optim.beta1 = 0.9
+    optim.eps = 1e-8
+    # optim.weight_decay = 1e-5
+    # optim.lr = 1e-4
+    # optim.momentum = 0.
+    # optim.gamma = 0.5
+    # optim.step_size = 30
     optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
