@@ -13,6 +13,7 @@ from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
 from datasets.cityscapes256.cityscapes256 import trainId2Color
+import sde_lib
 
 
 def train(config, workdir):
@@ -22,7 +23,8 @@ def train(config, workdir):
 
     #Initialize model and optimizer
     if config.model.name == 'unet':
-        model = UNet(config.data.n_channels, config.data.n_labels)
+        model = UNet(config.data.n_channels + (1 if config.training.conditional else 0),
+                     config.data.n_labels)
     elif config.model.name == 'fcn':
         assert config.data.n_channels == 3
         vgg_model = vgg_net.VGGNet()
@@ -46,22 +48,19 @@ def train(config, workdir):
     pred_dir = os.path.join(workdir, 'pred_img')
     Path(pred_dir).mkdir(parents=True, exist_ok=True)
 
-    #Create score dirs
-    score_dir = os.path.join(workdir, "scores")
-    Path(score_dir).mkdir(parents=True, exist_ok=True)
-    IU_scores = np.zeros((config.training.epochs, config.data.n_labels))
-    pixel_scores = np.zeros(config.training.epochs)
-
     #Get data iterators
     data_loader_train, data_loader_eval = data_loader.get_dataset(config)
     logging.info('Dataset initialized')
+
+    # Get SDE
+    sde = sde_lib.get_SDE(config)
+    logging.info('SDE initialized')
 
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
 
     #Get step function
     scaler = None if not config.optim.mixed_prec else torch.cuda.amp.GradScaler()
-    step_fn = losses.get_step_fn(config, model, optimizer, loss_fn, scaler)
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -72,8 +71,29 @@ def train(config, workdir):
         for img, target in data_loader_train:
             img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
 
+            # Conditioning on noise scales
+            if config.training.conditional:
+                eps = 1e-5
+                t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
+                z = torch.randn_like(img)
+                mean, std = sde.marginal_prob(img, t)
+                perturbed_img = mean + std[:, None, None, None] * z
+                noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
+
             #Training step
-            loss = step_fn(img, target)
+            optimizer.zero_grad()
+            if not config.optim.mixed_prec:
+                pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
+                loss = loss_fn(pred, target)
+                loss.backward()
+                optimizer.step()
+            else:
+                with torch.cuda.amp.autocast():
+                    pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
+                    loss = loss_fn(pred, target)
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
             step += 1
 
             #Report training loss
@@ -113,14 +133,15 @@ def train(config, workdir):
             model.eval()
 
             # Conditioning on noise scales
-            eps = 1e-5
-            t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
-            z = torch.randn_like(img)
-            mean, std = sde.marginal_prob(img, t)
-            perturbed_img = mean + std[:, None, None, None] * z
-            noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
+            if config.training.conditional:
+                eps = 1e-5
+                t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
+                z = torch.randn_like(img)
+                mean, std = sde.marginal_prob(img, t)
+                perturbed_img = mean + std[:, None, None, None] * z
+                noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
 
-            pred = model(perturbed_img, noise)
+            pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
             pred = torch.argmax(pred, dim=1)
             target = torch.argmax(target, dim=1)
 
@@ -164,19 +185,20 @@ def train(config, workdir):
 
         #Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
-            eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval)
+            eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval, sde=sde)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
         epoch += 1
 
 
-def eval(config, workdir, while_training=False, model=None, data_loader_eval=None):
+def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None):
     if not while_training:
         #Load model
         loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
         if config.model.name == 'unet':
-            model = UNet(config.data.n_channels, config.data.n_labels)
+            model = UNet(config.data.n_channels + (1 if config.training.conditional else 0),
+                         config.data.n_labels)
         elif config.model.name == 'fcn':
             vgg_model = vgg_net.VGGNet()
             model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
@@ -187,9 +209,14 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         # Get data iterators
         data_loader_train, data_loader_eval = data_loader.get_dataset(config)
         logging.info('Dataset initialized')
+
+        # Get SDE
+        sde = sde_lib.get_SDE(config)
+        logging.info('SDE initialized')
     else:
         assert model is not None
         assert data_loader_eval is not None
+        assert sde is not None
     model.eval()
 
     total_ious = []
@@ -197,7 +224,16 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     for img, target in data_loader_eval:
         img = img.to(config.device)
 
-        pred = model(img)
+        # Conditioning on noise scales
+        if config.training.conditional:
+            eps = 1e-5
+            t = torch.rand(img.shape[0], device=config.device) * (1 - eps) + eps
+            z = torch.randn_like(img)
+            mean, std = sde.marginal_prob(img, t)
+            perturbed_img = mean + std[:, None, None, None] * z
+            noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
+
+        pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()
