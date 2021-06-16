@@ -253,7 +253,7 @@ def _pixel_acc(pred, target):
     total = (target == target).sum()
     return correct / total
 
-def _save_map(map, filename, save_dir):
+def _save_map(map, save_dir, filename):
     """
     Saves a segmentation map as color image
 
