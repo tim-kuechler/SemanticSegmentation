@@ -1,4 +1,4 @@
-""" Full assembly of the parts to form the complete network """
+"""The Unet model. Copied from https://github.com/milesial/Pytorch-UNet"""
 from .layers import *
 
 

@@ -1,3 +1,4 @@
+"""VGG net. Modified from https://github.com/pochih/FCN-pytorch"""
 from torchvision import models
 from torchvision.models.vgg import VGG
 import torch.nn as nn

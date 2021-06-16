@@ -6,9 +6,6 @@ from collections import namedtuple
 import torchvision.transforms.functional as F
 from random import randint
 import torch.nn.functional
-import numpy as np
-from torchvision.utils import make_grid, save_image
-from pathlib import Path
 
 
 id2trainId = {}

@@ -1,3 +1,4 @@
+"""FCN model. Modified from https://github.com/pochih/FCN-pytorch"""
 import torch.nn as nn
 
 
@@ -39,6 +40,3 @@ class FCNs(nn.Module):
         score = self.classifier(score)                    # size=(N, n_class, x.H/1, x.W/1)
 
         return score  # size=(N, n_class, x.H/1, x.W/1)
-
-
-
