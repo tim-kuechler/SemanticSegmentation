@@ -22,7 +22,10 @@ def train(config, workdir):
     print(noise.size())
     noise = torch.unsqueeze(noise, -1)
     print(noise.size())
-    noise = noise.expand(3, 1, 10)
+    noise = noise.expand(3, 1, 5)
+    print(noise.size())
+    noise = torch.unsqueeze(noise, -1)
+    noise = noise.expand(3, 1, 5, 5)
     print(noise.size())
     print(noise)
 
