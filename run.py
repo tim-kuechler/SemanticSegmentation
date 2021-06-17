@@ -95,7 +95,7 @@ def train(config, workdir):
                 optimizer.step()
             else:
                 with torch.cuda.amp.autocast():
-                    pred = model(img) if not config.training.conditional else model(perturbed_img, std)
+                    pred = model(img) if not config.training.conditional else model(perturbed_img, t)
                     loss = loss_fn(pred, target)
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
