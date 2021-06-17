@@ -86,6 +86,13 @@ def train(config, workdir):
                 perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
+            print(perturbed_img)
+
+            # Save perturbed image
+            nrow = int(np.sqrt(perturbed_img.shape[0]))
+            image_grid = make_grid(perturbed_img, nrow, padding=2)
+            save_image(image_grid, os.path.join('/export/home/tkuechle', 'pert.png'))
+
             #Training step
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
@@ -153,7 +160,7 @@ def train(config, workdir):
                 perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-                pred = model(img) if not config.training.conditional else model(perturbed_img, std)
+                pred = model(img) if not config.training.conditional else model(perturbed_img, t)
                 pred = torch.argmax(pred, dim=1)
                 target = torch.argmax(target, dim=1)
 
