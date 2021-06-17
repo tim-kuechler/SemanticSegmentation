@@ -84,7 +84,7 @@ def train(config, workdir):
                     max[N] = torch.max(perturbed_img[N,:,:,:])
                     min[N] = torch.min(perturbed_img[N, :, :, :])
                 perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
-                perturbed_img = torch.div(perturbed_img, max - min)
+                perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
             #Training step
             optimizer.zero_grad()
@@ -151,7 +151,7 @@ def train(config, workdir):
                         max[N] = torch.max(perturbed_img[N, :, :, :])
                         min[N] = torch.min(perturbed_img[N, :, :, :])
                 perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
-                perturbed_img = torch.div(perturbed_img, max - min)
+                perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
                 pred = model(img) if not config.training.conditional else model(perturbed_img, std)
                 pred = torch.argmax(pred, dim=1)
