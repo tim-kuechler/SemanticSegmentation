@@ -78,11 +78,13 @@ def train(config, workdir):
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
+                print(torch.max(z, dim=1))
+                perturbed_img = perturbed_img - torch.max(z, dim=1)[:, None, None, None] * torch.ones_like(img)
 
             #Training step
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
-                pred = model(img) if not config.training.conditional else model(perturbed_img, std)
+                pred = model(img) if not config.training.conditional else model(perturbed_img, t)
                 loss = loss_fn(pred, target)
                 loss.backward()
                 optimizer.step()
@@ -138,10 +140,8 @@ def train(config, workdir):
                     z = torch.randn_like(img)
                     mean, std = sde.marginal_prob(img, t)
                     perturbed_img = mean + std[:, None, None, None] * z
-                    print(torch.max(z, dim=1))
-                    perturbed_img = perturbed_img - torch.max(z, dim=1)[:, None, None, None] * torch.ones_like(img)
 
-                pred = model(img) if not config.training.conditional else model(perturbed_img, t)
+                pred = model(img) if not config.training.conditional else model(perturbed_img, std)
                 pred = torch.argmax(pred, dim=1)
                 target = torch.argmax(target, dim=1)
 
