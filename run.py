@@ -79,10 +79,12 @@ def train(config, workdir):
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
                 max = torch.ones(perturbed_img.shape[0])
+                min = torch.ones(perturbed_img.shape[0])
                 for N in range(perturbed_img.shape[0]):
-                    max[N] = torch.max(img[N,:,:,:])
-                print(max)
-                perturbed_img = perturbed_img - torch.max(z, dim=1)[:, None, None, None] * torch.ones_like(img)
+                    max[N] = torch.max(perturbed_img[N,:,:,:])
+                    min[N] = torch.min(perturbed_img[N, :, :, :])
+                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img)
+                perturbed_img = torch.div(perturbed_img, max - min)
 
             #Training step
             optimizer.zero_grad()
@@ -143,6 +145,13 @@ def train(config, workdir):
                     z = torch.randn_like(img)
                     mean, std = sde.marginal_prob(img, t)
                     perturbed_img = mean + std[:, None, None, None] * z
+                max = torch.ones(perturbed_img.shape[0])
+                min = torch.ones(perturbed_img.shape[0])
+                for N in range(perturbed_img.shape[0]):
+                    max[N] = torch.max(perturbed_img[N, :, :, :])
+                    min[N] = torch.min(perturbed_img[N, :, :, :])
+                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img)
+                perturbed_img = torch.div(perturbed_img, max - min)
 
                 pred = model(img) if not config.training.conditional else model(perturbed_img, std)
                 pred = torch.argmax(pred, dim=1)
@@ -156,6 +165,11 @@ def train(config, workdir):
                 nrow = int(np.sqrt(img.shape[0]))
                 image_grid = make_grid(img, nrow, padding=2)
                 save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
+
+                # Save perturbed image
+                nrow = int(np.sqrt(perturbed_img.shape[0]))
+                image_grid = make_grid(perturbed_img, nrow, padding=2)
+                save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
 
                 # Save prediction and original map as color image
                 _save_map(pred, this_pred_dir, 'pred.png')

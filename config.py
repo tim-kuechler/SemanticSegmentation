@@ -52,7 +52,7 @@ def get_config_cityscapes():
     training.batch_size = 16
     training.log_freq = 10
     training.eval_freq = 1000
-    training.save_pred_freq = 5
+    training.save_pred_freq = 1
     training.full_eval_freq = 10
     training.checkpoint_save_freq = 15
     training.conditional = True
