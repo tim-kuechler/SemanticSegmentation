@@ -221,6 +221,26 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
 
 
+def _save_map(map, save_dir, filename):
+    """
+    Saves a segmentation map as color image
+
+    :param mask: A mask in format (N, H, W) (not one-hot!)
+    :param filename: The name of the image file
+    :param save_dir: The directory to save to
+    """
+    mask_color = torch.zeros((map.shape[0], 3, map.shape[1], map.shape[2]))
+    for N in range(0, map.shape[0]):
+        for h in range(0, map.shape[1]):
+            for w in range(0, map.shape[2]):
+                color = trainId2Color[str(map[N, h, w].item())]
+                mask_color[N, 0, h, w] = color[0]
+                mask_color[N, 1, h, w] = color[1]
+                mask_color[N, 2, h, w] = color[2]
+    nrow = int(np.sqrt(mask_color.shape[0]))
+    image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
+    save_image(image_grid, os.path.join(save_dir, filename))
+
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
 def _iou(pred, target, config):
     """ Calculates class intersections over unions
@@ -254,22 +274,3 @@ def _pixel_acc(pred, target):
     total = (target == target).sum()
     return correct / total
 
-def _save_map(map, save_dir, filename):
-    """
-    Saves a segmentation map as color image
-
-    :param mask: A mask in format (N, H, W) (not one-hot!)
-    :param filename: The name of the image file
-    :param save_dir: The directory to save to
-    """
-    mask_color = torch.zeros((map.shape[0], 3, map.shape[1], map.shape[2]))
-    for N in range(0, map.shape[0]):
-        for h in range(0, map.shape[1]):
-            for w in range(0, map.shape[2]):
-                color = trainId2Color[str(map[N, h, w].item())]
-                mask_color[N, 0, h, w] = color[0]
-                mask_color[N, 1, h, w] = color[1]
-                mask_color[N, 2, h, w] = color[2]
-    nrow = int(np.sqrt(mask_color.shape[0]))
-    image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
-    save_image(image_grid, os.path.join(save_dir, filename))
