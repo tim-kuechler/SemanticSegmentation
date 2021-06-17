@@ -78,7 +78,8 @@ def train(config, workdir):
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
-                print(torch.max(z)[0])
+                print(torch.max(perturbed_img[0,0,:,:]))
+
                 perturbed_img = perturbed_img - torch.max(z, dim=1)[:, None, None, None] * torch.ones_like(img)
 
             #Training step
