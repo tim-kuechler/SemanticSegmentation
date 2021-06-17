@@ -86,13 +86,6 @@ def train(config, workdir):
                 perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-            print(perturbed_img)
-
-            # Save perturbed image
-            nrow = int(np.sqrt(perturbed_img.shape[0]))
-            image_grid = make_grid(perturbed_img, nrow, padding=2)
-            save_image(image_grid, os.path.join('/export/home/tkuechle', 'pert.png'))
-
             #Training step
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
@@ -157,7 +150,7 @@ def train(config, workdir):
                     for N in range(perturbed_img.shape[0]):
                         max[N] = torch.max(perturbed_img[N, :, :, :])
                         min[N] = torch.min(perturbed_img[N, :, :, :])
-                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
+                perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
                 pred = model(img) if not config.training.conditional else model(perturbed_img, t)
@@ -231,7 +224,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
 
-        pred = model(img) if not config.training.conditional else model(perturbed_img, std)
+        pred = model(img) if not config.training.conditional else model(perturbed_img, t)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()
