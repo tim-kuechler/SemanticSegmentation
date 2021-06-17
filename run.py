@@ -78,8 +78,8 @@ def train(config, workdir):
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
+                print(perturbed_img.size())
                 max = torch.tensor(perturbed_img.shape[0])
-                print(max.size())
                 for N in range(perturbed_img.shape[0]):
                     max[N] = torch.max(perturbed_img[N,:,:,:])
                 print(max)
