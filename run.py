@@ -80,8 +80,8 @@ def train(config, workdir):
                 perturbed_img = mean + std[:, None, None, None] * z
                 max = torch.tensor(perturbed_img.shape[0])
                 for N in range(perturbed_img.shape[0]):
-                    max[N] = torch.max(perturbed_img[N,:,:,:]).item()
-                    print(torch.max(perturbed_img[N,:,:,:]).item())
+                    max[N] = torch.max(perturbed_img[N,:,:,:])
+                    print(torch.max(perturbed_img[N,:,:,:]))
                 perturbed_img = perturbed_img - torch.max(z, dim=1)[:, None, None, None] * torch.ones_like(img)
 
             #Training step
