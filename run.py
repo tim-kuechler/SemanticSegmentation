@@ -138,8 +138,10 @@ def train(config, workdir):
                     z = torch.randn_like(img)
                     mean, std = sde.marginal_prob(img, t)
                     perturbed_img = mean + std[:, None, None, None] * z
+                    print(torch.max(z, dim=1))
+                    perturbed_img = perturbed_img - torch.max(z, dim=1)[:, None, None, None] * torch.ones_like(img)
 
-                pred = model(img) if not config.training.conditional else model(perturbed_img, std)
+                pred = model(img) if not config.training.conditional else model(perturbed_img, t)
                 pred = torch.argmax(pred, dim=1)
                 target = torch.argmax(target, dim=1)
 
@@ -204,9 +206,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
-            noise = sde.marginal_prob(torch.zeros_like(perturbed_img), t)[1]
 
-        pred = model(img) if not config.training.conditional else model(perturbed_img, noise)
+        pred = model(img) if not config.training.conditional else model(perturbed_img, std)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()
