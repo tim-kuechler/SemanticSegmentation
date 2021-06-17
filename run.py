@@ -159,8 +159,8 @@ def train(config, workdir):
                     for N in range(perturbed_img.shape[0]):
                         max[N] = torch.max(perturbed_img[N, :, :, :])
                         min[N] = torch.min(perturbed_img[N, :, :, :])
-                perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
-                perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
+                    perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
+                    perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
                 pred = model(img) if not config.training.conditional else model(perturbed_img, t)
                 pred = torch.argmax(pred, dim=1)
