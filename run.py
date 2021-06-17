@@ -64,6 +64,7 @@ def train(config, workdir):
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
+    loss_per_log_period = 0
     for i in range(epoch, config.training.epochs + 1):
         start_time = time.time()
         model.train()
@@ -103,22 +104,29 @@ def train(config, workdir):
             step += 1
 
             #Report training loss
+            loss_per_log_period += loss
             if step % config.training.log_freq == 0:
-                logging.info('step: %d (epoch: %d), training_loss: %.5e' % (step, epoch, loss.item()))
+                mean_loss = loss_per_log_period / config.training.log_freq
+                with open(os.path.join(workdir, 'training_loss.txt'), 'a+') as training_loss_file:
+                    training_loss_file.write(str(step) + '\t' + str(mean_loss) + '\n')
+                logging.info(f'step: {step} (epoch: {epoch}), training_loss: {mean_loss}')
+                loss_per_log_period = 0
 
-            # #Evaluation of model loss
-            # if step % config.training.eval_freq == 0:
-            #     model.eval()
-            #     tot_eval_loss = 0
-            #
-            #     for eval_img, eval_target in data_loader_eval:
-            #         eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
-            #
-            #         with torch.no_grad():
-            #             eval_pred = model(eval_img)
-            #         tot_eval_loss += loss_fn(eval_pred, eval_target).item()
-            #     logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
-            #     model.train()
+            #Evaluation of model loss
+            if step % config.training.eval_freq == 0 and not config.training.conditional:
+                model.eval()
+                tot_eval_loss = 0
+
+                for eval_img, eval_target in data_loader_eval:
+                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
+
+                    with torch.no_grad():
+                        eval_pred = model(eval_img)
+                    tot_eval_loss += loss_fn(eval_pred, eval_target).item()
+                with open(os.path.join(workdir, 'eval_loss.txt'), 'a+') as eval_loss_file:
+                    eval_loss_file.write(str(step) + '\t' + str(tot_eval_loss) + '\n')
+                logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
+                model.train()
 
         # Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
