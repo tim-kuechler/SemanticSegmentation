@@ -22,7 +22,6 @@ class UNet(nn.Module):
         self.outc = nn.Conv2d(64, self.n_classes, kernel_size=1)
 
     def forward(self, x, noise=None):
-        print(x, noise)
         if noise is not None:
             # Combine x and noise
             noise = torch.unsqueeze(noise, -1)
