@@ -245,6 +245,10 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     total_ious = np.array(total_ious).transpose()  # n_class * val_len
     ious = np.nanmean(total_ious, axis=1)
     pixel_accs = np.array(pixel_accs).mean()
+    with open(os.path.join(workdir, 'eval_acc_iou.txt'), 'a+') as eval_file:
+        eval_file.write(str(pixel_accs) + '\t' + str(np.nanmean(ious)) + '\n')
+    with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
+        eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
 
 
