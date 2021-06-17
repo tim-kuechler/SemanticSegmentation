@@ -102,7 +102,7 @@ def get_config_cityscapes():
     training.save_pred_freq = 5
     training.full_eval_freq = 5
     training.checkpoint_save_freq = 5
-    training.conditional = True
+    training.conditional = False
     training.sde = 'vesde'
 
     # Model
