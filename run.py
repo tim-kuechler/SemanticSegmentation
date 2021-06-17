@@ -53,8 +53,9 @@ def train(config, workdir):
     logging.info('Dataset initialized')
 
     # Get SDE
-    sde = sde_lib.get_SDE(config)
-    logging.info('SDE initialized')
+    if config.training.conditional:
+        sde = sde_lib.get_SDE(config)
+        logging.info('SDE initialized')
 
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
