@@ -175,10 +175,11 @@ def train(config, workdir):
                 image_grid = make_grid(img, nrow, padding=2)
                 save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-                # Save perturbed image
-                nrow = int(np.sqrt(perturbed_img.shape[0]))
-                image_grid = make_grid(perturbed_img, nrow, padding=2)
-                save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
+                if config.training.conditional:
+                    # Save perturbed image
+                    nrow = int(np.sqrt(perturbed_img.shape[0]))
+                    image_grid = make_grid(perturbed_img, nrow, padding=2)
+                    save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
 
                 # Save prediction and original map as color image
                 _save_map(pred, this_pred_dir, 'pred.png')
