@@ -78,12 +78,12 @@ def train(config, workdir):
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
-                max = torch.ones(perturbed_img.shape[0])
-                min = torch.ones(perturbed_img.shape[0])
+                max = torch.ones(perturbed_img.shape[0], device=config.device)
+                min = torch.ones(perturbed_img.shape[0], device=config.device)
                 for N in range(perturbed_img.shape[0]):
                     max[N] = torch.max(perturbed_img[N,:,:,:])
                     min[N] = torch.min(perturbed_img[N, :, :, :])
-                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img)
+                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, max - min)
 
             #Training step
@@ -145,12 +145,12 @@ def train(config, workdir):
                     z = torch.randn_like(img)
                     mean, std = sde.marginal_prob(img, t)
                     perturbed_img = mean + std[:, None, None, None] * z
-                max = torch.ones(perturbed_img.shape[0])
-                min = torch.ones(perturbed_img.shape[0])
-                for N in range(perturbed_img.shape[0]):
-                    max[N] = torch.max(perturbed_img[N, :, :, :])
-                    min[N] = torch.min(perturbed_img[N, :, :, :])
-                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img)
+                    max = torch.ones(perturbed_img.shape[0], device=config.device)
+                    min = torch.ones(perturbed_img.shape[0], device=config.device)
+                    for N in range(perturbed_img.shape[0]):
+                        max[N] = torch.max(perturbed_img[N, :, :, :])
+                        min[N] = torch.min(perturbed_img[N, :, :, :])
+                perturbed_img = perturbed_img - max[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, max - min)
 
                 pred = model(img) if not config.training.conditional else model(perturbed_img, std)
