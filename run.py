@@ -232,6 +232,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
+            perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
+            perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
         pred = model(img) if not config.training.conditional else model(perturbed_img, t)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
