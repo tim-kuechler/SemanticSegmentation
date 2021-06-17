@@ -105,7 +105,7 @@ def train(config, workdir):
             step += 1
 
             #Report training loss
-            loss_per_log_period += loss
+            loss_per_log_period += loss.item()
             if step % config.training.log_freq == 0:
                 mean_loss = loss_per_log_period / config.training.log_freq
                 with open(os.path.join(workdir, 'training_loss.txt'), 'a+') as training_loss_file:
