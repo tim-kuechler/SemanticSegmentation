@@ -48,17 +48,17 @@ class FLICKR(Dataset):
         #Load and resize
         image = Image.open(self.images[index]).convert('RGB')
         target = Image.open(self.targets[index])
-        too_small = np.minimum(image.size[0], image.size[1]) < 256
+        too_small = np.minimum(image.size[0], image.size[1]) < 512
         if too_small:
-            scale = (256 / np.minimum(image.size[0], image.size[1])) + 0.1
+            scale = (512 / np.minimum(image.size[0], image.size[1])) + 0.1
             image = F.resize(image, [int(image.size[1] * scale), int(image.size[0] * scale)], interpolation=F.InterpolationMode.BICUBIC)
             target = F.resize(target, [int(image.size[1] * scale), int(image.size[0] * scale)], interpolation=F.InterpolationMode.BICUBIC)
 
         #Crop
-        top = randint(0, image.size[1] - 256)
-        left = randint(0, image.size[0] - 256)
-        image = F.crop(image, top, left, 256, 256)
-        target = F.crop(target, top, left, 256, 256)
+        top = randint(0, image.size[1] - 512)
+        left = randint(0, image.size[0] - 512)
+        image = F.crop(image, top, left, 512, 512)
+        target = F.crop(target, top, left, 512, 512)
 
         #To tensor
         image = F.to_tensor(image)
