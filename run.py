@@ -77,7 +77,7 @@ def train(config, workdir):
             if config.training.conditional:
                 eps = 1e-5
                 t1 = (0.5 - 1) * torch.rand(int(img.shape[0] / 2), device=config.device) + 1
-                t2 = torch.rand(int(img.shape[0] / 2), device=config.device) * (1 - eps) + eps
+                t2 = torch.rand(img.shape[0] - int(img.shape[0] / 2), device=config.device) * (1 - eps) + eps
                 t = torch.cat([t1, t2], dim=0)
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
