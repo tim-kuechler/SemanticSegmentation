@@ -25,7 +25,7 @@ def train(config, workdir):
     if config.model.name == 'unet':
         model = UNet(config)
     elif config.model.name == 'fcn':
-        assert config.training.conditional == False, "FCN can only be trained unconditionally"
+        assert config.model.conditional == False, "FCN can only be trained unconditionally"
         assert config.data.n_channels == 3, "FCN can only be trained on 3 channel images"
         vgg_model = vgg_net.VGGNet()
         model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
@@ -53,7 +53,7 @@ def train(config, workdir):
     logging.info('Dataset initialized')
 
     # Get SDE
-    if config.training.conditional:
+    if config.model.conditional:
         sde = sde_lib.get_SDE(config)
         logging.info('SDE initialized')
 
@@ -74,7 +74,7 @@ def train(config, workdir):
             img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
 
             # Conditioning on noise scales
-            if config.training.conditional:
+            if config.model.conditional:
                 eps = 1e-5
                 t1 = (0.5 - 1) * torch.rand(int(img.shape[0] / 2), device=config.device) + 1
                 t2 = torch.rand(img.shape[0] - int(img.shape[0] / 2), device=config.device) * (1 - eps) + eps
@@ -93,13 +93,13 @@ def train(config, workdir):
             #Training step
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
-                pred = model(img) if not config.training.conditional else model(perturbed_img, t)
+                pred = model(img) if not config.model.conditional else model(perturbed_img, t)
                 loss = loss_fn(pred, target)
                 loss.backward()
                 optimizer.step()
             else:
                 with torch.cuda.amp.autocast():
-                    pred = model(img) if not config.training.conditional else model(perturbed_img, t)
+                    pred = model(img) if not config.model.conditional else model(perturbed_img, t)
                     loss = loss_fn(pred, target)
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
@@ -116,7 +116,7 @@ def train(config, workdir):
                 loss_per_log_period = 0
 
             #Evaluation of model loss
-            if step % config.training.eval_freq == 0 and not config.training.conditional:
+            if step % config.training.eval_freq == 0 and not config.model.conditional:
                 model.eval()
                 tot_eval_loss = 0
 
@@ -150,7 +150,7 @@ def train(config, workdir):
                 model.eval()
 
                 # Conditioning on noise scales
-                if config.training.conditional:
+                if config.model.conditional:
                     eps = 1e-5
                     t = torch.linspace(1, eps, img.shape[0], device=config.device)
                     z = torch.randn_like(img)
@@ -164,7 +164,7 @@ def train(config, workdir):
                     perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
                     perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-                pred = model(img) if not config.training.conditional else model(perturbed_img, t)
+                pred = model(img) if not config.model.conditional else model(perturbed_img, t)
                 pred = torch.argmax(pred, dim=1)
                 target = torch.argmax(target, dim=1)
 
@@ -177,7 +177,7 @@ def train(config, workdir):
                 image_grid = make_grid(img, nrow, padding=2)
                 save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-                if config.training.conditional:
+                if config.model.conditional:
                     # Save perturbed image
                     nrow = int(np.sqrt(perturbed_img.shape[0]))
                     image_grid = make_grid(perturbed_img, nrow, padding=2)
@@ -191,7 +191,7 @@ def train(config, workdir):
         #Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
             eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
-                 sde=None if not config.training.conditional else sde)
+                 sde=None if not config.model.conditional else sde)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
@@ -221,7 +221,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     else:
         assert model is not None
         assert data_loader_eval is not None
-        if config.training.conditional: assert sde is not None
+        if config.model.conditional: assert sde is not None
     model.eval()
 
     total_ious = []
@@ -230,7 +230,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         img = img.to(config.device)
 
         # Conditioning on noise scales
-        if config.training.conditional:
+        if config.model.conditional:
             eps = 1e-5
             t = torch.linspace(1, eps, img.shape[0], device=config.device)
             z = torch.randn_like(img)
@@ -244,7 +244,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
             perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-        pred = model(img) if not config.training.conditional else model(perturbed_img, t)
+        pred = model(img) if not config.model.conditional else model(perturbed_img, t)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()

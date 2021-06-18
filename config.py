@@ -55,7 +55,6 @@ def get_config_cityscapes():
     training.save_pred_freq = 5
     training.full_eval_freq = 5
     training.checkpoint_save_freq = 15
-    training.conditional = True
     training.sde = 'vesde'
 
     # Model
@@ -64,6 +63,7 @@ def get_config_cityscapes():
     model.sigma_max = 338
     model.num_scales = 2000
     model.bilinear = True
+    model.conditional = True
     model.name = 'unet'
 
     # Data
@@ -97,11 +97,11 @@ def get_config_cityscapes():
 #     training.save_pred_freq = 5
 #     training.full_eval_freq = 5
 #     training.checkpoint_save_freq = 5
-#     training.conditional = False
 #     training.sde = 'vesde'
 #
 #     # Model
 #     config.model = model = ml_collections.ConfigDict()
+#     model.conditional = False
 #     model.name = 'fcn'
 #
 #     # Data
