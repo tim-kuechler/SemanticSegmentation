@@ -188,7 +188,8 @@ def train(config, workdir):
 
         #Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
-            eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval, sde=sde)
+            eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
+                 sde=None if not config.training.conditional else sde)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
@@ -218,7 +219,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     else:
         assert model is not None
         assert data_loader_eval is not None
-        assert sde is not None
+        if config.training.conditional: assert sde is not None
     model.eval()
 
     total_ious = []
