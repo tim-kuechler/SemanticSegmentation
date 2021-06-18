@@ -49,19 +49,19 @@ def get_config_cityscapes():
     # Training
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 500
-    training.batch_size = 16
+    training.batch_size = 8
     training.log_freq = 12
     training.eval_freq = 500
     training.save_pred_freq = 5
     training.full_eval_freq = 5
     training.checkpoint_save_freq = 15
-    training.conditional = False
+    training.conditional = True
     training.sde = 'vesde'
 
     # Model
     config.model = model = ml_collections.ConfigDict()
     model.sigma_min = 0.01
-    model.sigma_max = 380
+    model.sigma_max = 338
     model.num_scales = 2000
     model.bilinear = True
     model.name = 'unet'
