@@ -17,7 +17,7 @@ class FLICKR(Dataset):
     """
     def __init__(self, root=None, train=True):
         self.root = root
-        self.n_labels = 255
+        self.n_labels = 182
 
         if train:
             self.data_csv = './datasets/flickr/flickr_landscapes_train_split.txt'
