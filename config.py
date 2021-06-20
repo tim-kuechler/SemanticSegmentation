@@ -4,26 +4,32 @@ import torch
 
 def get_config(dataset):
     if dataset == 'flickr':
-        return get_config_unet()
+        return get_config_flickr()
     elif dataset == 'cityscapes':
         return get_config_cityscapes()
 
-def get_config_unet():
+def get_config_flickr():
     config = ml_collections.ConfigDict()
 
     # Training
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 500
-    training.batch_size = 16
-    training.log_freq = 100
-    training.eval_freq = 2500
-    training.checkpoint_save_freq = 15
+    training.batch_size = 8
+    training.log_freq = 12
+    training.eval_freq = 500
+    training.save_pred_freq = 1
+    training.full_eval_freq = 1
+    training.checkpoint_save_freq = 2
     training.sde = 'vesde'
 
     # Model
     config.model = model = ml_collections.ConfigDict()
+    model.sigma_min = 0.01
+    model.sigma_max = 440
+    model.num_scales = 2000
+    model.bilinear = True
+    model.conditional = True
     model.name = 'unet'
-    model.n_labels = 182
 
     # Data
     config.data = data = ml_collections.ConfigDict()
