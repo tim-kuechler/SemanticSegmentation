@@ -70,7 +70,7 @@ class CITYSCAPES256(Dataset):
             otherwise ``train``, ``train_extra`` or ``val``
         mode (string, optional): The quality mode to use, ``fine`` or ``coarse``
     """
-    def __init__(self, root, split="train", mode="fine"):
+    def __init__(self, root, split="train", mode="fine", crop=True):
         self.root = root
         self.mode = 'gtFine' if mode == 'fine' else 'gtCoarse'
         self.images_dir = os.path.join(self.root, 'leftImg8bit', split)
@@ -79,6 +79,7 @@ class CITYSCAPES256(Dataset):
         self.images = []
         self.targets = []
         self.n_labels = 20
+        self.crop = crop
 
         for city in os.listdir(self.images_dir):
             img_dir = os.path.join(self.images_dir, city)
@@ -113,9 +114,10 @@ class CITYSCAPES256(Dataset):
         target = F.resize(target, [256, 512], interpolation=F.InterpolationMode.NEAREST)
 
         #Crop
-        left = randint(0, 256)
-        image = F.crop(image, 0, left, 256, 256)
-        target = F.crop(target, 0, left, 256, 256)
+        if self.crop:
+            left = randint(0, 256)
+            image = F.crop(image, 0, left, 256, 256)
+            target = F.crop(target, 0, left, 256, 256)
 
         #To tensor
         image = F.to_tensor(image)
