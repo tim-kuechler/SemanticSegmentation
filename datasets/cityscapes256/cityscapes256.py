@@ -126,8 +126,8 @@ class CITYSCAPES256(Dataset):
         target = torch.squeeze(target, dim=0)
 
         #Change labels in target to train ids
-        for h in range(256):
-            for w in range(256):
+        for h in range(target.shape[0]):
+            for w in range(target.shape[1]):
                 id = target[h, w].item()
                 try:
                     trainId = id2trainId[str(id)]
@@ -135,7 +135,6 @@ class CITYSCAPES256(Dataset):
                     trainId = id2trainId[str(0)]
                 target[h, w] = trainId
 
-        print(id2trainId)
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
 
         return image, target
