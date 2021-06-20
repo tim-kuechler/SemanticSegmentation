@@ -3,13 +3,14 @@ from torch.utils.data import Dataset
 import os
 from PIL import Image
 from collections import namedtuple
+from os.path import exists, split
 import torchvision.transforms.functional as F
 from random import randint
 import torch.nn.functional
+import numpy as np
 
 
 id2trainId = {}
-trainId2Color = {}
 Label = namedtuple('Label', [
                    'name',
                    'id',
@@ -97,15 +98,6 @@ class CITYSCAPES256(Dataset):
             id = obj.id
             id2trainId[str(id)] = idx
 
-        # change trainId to color
-        trainId2Color[str(0)] = (0, 0, 0)  # add an void class
-        for obj in labels:
-            if obj.ignoreInEval:
-                continue
-            idx = obj.trainId
-            color = obj.color
-            trainId2Color[str(idx)] = color
-
     def __getitem__(self, index):
         """
         Args:
@@ -147,3 +139,42 @@ class CITYSCAPES256(Dataset):
 
     def __len__(self):
         return len(self.images)
+
+
+# borrow functions and modify it from https://github.com/fyu/drn/blob/master/segment.py
+CITYSCAPE_PALETTE = np.asarray([
+    [0, 0, 0],
+    [128, 64, 128]
+    [244, 35, 232],
+    [70, 70, 70],
+    [102, 102, 156],
+    [190, 153, 153],
+    [153, 153, 153],
+    [250, 170, 30],
+    [220, 220, 0],
+    [107, 142, 35],
+    [152, 251, 152],
+    [70, 130, 180],
+    [220, 20, 60],
+    [255, 0, 0],
+    [0, 0, 142],
+    [0, 0, 70],
+    [0, 60, 100],
+    [0, 80, 100],
+    [0, 0, 230],
+    [119, 11, 32]], dtype=np.uint8)
+
+
+def save_colorful_images(pred, output_dir, filename):
+    """
+    Saves a given (B x C x H x W) into an image file.
+    If given a mini-batch tensor, will save the tensor as a grid of images.
+    """
+    pred = torch.argmax(pred, dim=1)
+    pred = pred.cpu().numpy()
+    im = Image.fromarray(CITYSCAPE_PALETTE[pred[0].squeeze()])
+    fn = os.path.join(output_dir, filename + '.png')
+    out_dir = split(fn)[0]
+    if not exists(out_dir):
+        os.makedirs(out_dir)
+    im.save(fn)

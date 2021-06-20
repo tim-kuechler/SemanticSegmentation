@@ -16,7 +16,7 @@ def get_optimizer(config, model):
 
 def _cross_entropy_one_hot(pred, targets):
     targets = torch.argmax(targets, dim=1)
-    return F.cross_entropy(pred, Variable(targets))
+    return F.cross_entropy(pred, Variable(targets), ignore_index=0)
 
 def get_loss_fn(config):
     if config.model.name == 'unet':

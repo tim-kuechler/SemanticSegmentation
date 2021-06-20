@@ -12,7 +12,7 @@ from torch.optim import lr_scheduler
 from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
-from datasets.cityscapes256.cityscapes256 import trainId2Color
+from datasets.cityscapes256.cityscapes256 import save_colorful_images
 import sde_lib
 
 
@@ -165,8 +165,6 @@ def train(config, workdir):
                     perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
                 pred = model(img) if not config.model.conditional else model(perturbed_img, t)
-                pred = torch.argmax(pred, dim=1)
-                target = torch.argmax(target, dim=1)
 
                 # Create dir for epoch
                 this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
@@ -184,8 +182,8 @@ def train(config, workdir):
                     save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
 
                 # Save prediction and original map as color image
-                _save_map(pred, this_pred_dir, 'pred.png')
-                _save_map(target, this_pred_dir, 'mask.png')
+                save_colorful_images(pred, this_pred_dir, 'pred.png')
+                save_colorful_images(target, this_pred_dir, 'mask.png')
             logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
@@ -262,26 +260,6 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
 
-
-def _save_map(map, save_dir, filename):
-    """
-    Saves a segmentation map as color image
-
-    :param mask: A mask in format (N, H, W) (not one-hot!)
-    :param filename: The name of the image file
-    :param save_dir: The directory to save to
-    """
-    mask_color = torch.zeros((map.shape[0], 3, map.shape[1], map.shape[2]))
-    for N in range(0, map.shape[0]):
-        for h in range(0, map.shape[1]):
-            for w in range(0, map.shape[2]):
-                color = trainId2Color[str(map[N, h, w].item())]
-                mask_color[N, 0, h, w] = color[0]
-                mask_color[N, 1, h, w] = color[1]
-                mask_color[N, 2, h, w] = color[2]
-    nrow = int(np.sqrt(mask_color.shape[0]))
-    image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
-    save_image(image_grid, os.path.join(save_dir, filename))
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
 def _iou(pred, target, config):
