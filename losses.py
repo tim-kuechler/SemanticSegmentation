@@ -1,5 +1,6 @@
 import torch
 import torch.optim as optim
+import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
@@ -15,7 +16,7 @@ def get_optimizer(config, model):
 
 def _cross_entropy_one_hot(pred, targets):
     targets = torch.argmax(targets, dim=1)
-    return F.cross_entropy(pred, Variable(targets), ignore_index=255)
+    return F.cross_entropy(pred, Variable(targets))
 
 def get_loss_fn(config):
     if config.model.name == 'unet':
