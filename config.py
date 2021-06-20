@@ -14,7 +14,7 @@ def get_config_flickr():
     # Training
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 500
-    training.batch_size = 8
+    training.batch_size = 6
     training.log_freq = 12
     training.eval_freq = 500
     training.save_pred_freq = 1
