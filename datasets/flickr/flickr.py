@@ -53,7 +53,7 @@ class FLICKR(Dataset):
         if too_small:
             scale = (512 / np.minimum(image.size[0], image.size[1])) + 0.1
             image = F.resize(image, [int(image.size[1] * scale), int(image.size[0] * scale)], interpolation=F.InterpolationMode.BICUBIC)
-            target = F.resize(target, [int(image.size[1] * scale), int(image.size[0] * scale)], interpolation=F.InterpolationMode.BICUBIC)
+            target = F.resize(target, [int(image.size[1] * scale), int(image.size[0] * scale)], interpolation=F.InterpolationMode.NEAREST)
 
         #Crop
         top = randint(0, image.size[1] - 512)
