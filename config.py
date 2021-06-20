@@ -69,7 +69,7 @@ def get_config_cityscapes():
     # Data
     config.data = data = ml_collections.ConfigDict()
     data.dataset = 'cityscapes256'
-    data.n_labels = 19
+    data.n_labels = 20
     data.n_channels = 3
 
     # Optimization
