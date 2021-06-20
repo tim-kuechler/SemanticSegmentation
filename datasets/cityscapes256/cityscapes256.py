@@ -176,8 +176,7 @@ def save_colorful_images(pred, output_dir, filename):
     imgs = []
     for i in range(pred_cp.shape[0]):
         im = Image.fromarray(CITYSCAPE_PALETTE[pred[i].squeeze()])
-        print(F.to_tensor(im).size())
-        imgs.append(F.to_tensor(im))
+        imgs.append(torch.unsqueeze(F.to_tensor(im), dim=0))
 
     image = torch.cat(imgs, dim=0)
     nrow = int(np.sqrt(image.shape[0]))
