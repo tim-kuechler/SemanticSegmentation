@@ -48,8 +48,8 @@ def get_config_cityscapes():
 
     # Training
     config.training = training = ml_collections.ConfigDict()
-    training.epochs = 500
-    training.batch_size = 8
+    training.epochs = 5000
+    training.batch_size = 16
     training.log_freq = 12
     training.eval_freq = 500
     training.save_pred_freq = 5
