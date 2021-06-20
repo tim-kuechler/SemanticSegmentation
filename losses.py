@@ -1,6 +1,4 @@
-import torch
 import torch.optim as optim
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 
@@ -13,13 +11,12 @@ def get_optimizer(config, model):
                                   weight_decay=config.optim.weight_decay)
     return optimizer
 
-def _cross_entropy_one_hot(pred, targets):
-    targets = torch.argmax(targets, dim=1)
-    return F.cross_entropy(pred, Variable(targets), ignore_index=255)
+def _cross_entropy(pred, targets):
+    return F.cross_entropy(pred, targets, ignore_index=255)
 
 def get_loss_fn(config):
     if config.model.name == 'unet':
-        return _cross_entropy_one_hot
+        return _cross_entropy
     elif config.model.name == 'fcn':
         return F.binary_cross_entropy_with_logits
 

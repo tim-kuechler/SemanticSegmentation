@@ -243,7 +243,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         pred = model(img) if not config.model.conditional else model(perturbed_img, t)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
-        target = torch.argmax(target, dim=1).cpu().numpy()
+        target = target.cpu().numpy()
 
         for p, t in zip(pred, target):
             total_ious.append(_iou(p, t, config))

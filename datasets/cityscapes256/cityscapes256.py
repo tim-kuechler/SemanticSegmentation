@@ -64,7 +64,8 @@ class CITYSCAPES256(Dataset):
         target = F.to_tensor(target) * 255
         target = target.long()
         target = torch.squeeze(target, dim=0)
-        target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
+        print(target.size())
+        target = target.permute(2, 0, 1)
 
         return image, target
 
