@@ -12,7 +12,7 @@ from torch.optim import lr_scheduler
 from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
-from datasets.cityscapes256.cityscapes256 import trainId2Color
+from datasets.cityscapes256.cityscapes256 import save_colorful_images
 import sde_lib
 
 
@@ -48,7 +48,7 @@ def train(config, workdir):
     pred_dir = os.path.join(workdir, 'pred_img')
     Path(pred_dir).mkdir(parents=True, exist_ok=True)
 
-    #Get data iterators
+    # Get data iterators
     data_loader_train, data_loader_eval = data_loader.get_dataset(config)
     logging.info('Dataset initialized')
 
@@ -57,10 +57,10 @@ def train(config, workdir):
         sde = sde_lib.get_SDE(config)
         logging.info('SDE initialized')
 
-    #Get loss function
+    # Get loss function
     loss_fn = losses.get_loss_fn(config)
 
-    #Get step function
+    # Get step function
     scaler = None if not config.optim.mixed_prec else torch.cuda.amp.GradScaler()
 
     logging.info(f'Starting training loop at epoch {epoch}')
@@ -85,12 +85,12 @@ def train(config, workdir):
                 max = torch.ones(perturbed_img.shape[0], device=config.device)
                 min = torch.ones(perturbed_img.shape[0], device=config.device)
                 for N in range(perturbed_img.shape[0]):
-                    max[N] = torch.max(perturbed_img[N,:,:,:])
+                    max[N] = torch.max(perturbed_img[N, :, :, :])
                     min[N] = torch.min(perturbed_img[N, :, :, :])
                 perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-            #Training step
+            # Training step
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
                 pred = model(img) if not config.model.conditional else model(perturbed_img, t)
@@ -106,7 +106,7 @@ def train(config, workdir):
                 scaler.update()
             step += 1
 
-            #Report training loss
+            # Report training loss
             loss_per_log_period += loss.item()
             if step % config.training.log_freq == 0:
                 mean_loss = loss_per_log_period / config.training.log_freq
@@ -121,7 +121,8 @@ def train(config, workdir):
                 tot_eval_loss = 0
 
                 for eval_img, eval_target in data_loader_eval:
-                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
+                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device,
+                                                                                       dtype=torch.float32)
 
                     with torch.no_grad():
                         eval_pred = model(eval_img)
@@ -161,34 +162,29 @@ def train(config, workdir):
                     for N in range(perturbed_img.shape[0]):
                         max[N] = torch.max(perturbed_img[N, :, :, :])
                         min[N] = torch.min(perturbed_img[N, :, :, :])
-                    perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
+                    perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img,
+                                                                                               device=config.device)
                     perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
                 pred = model(img) if not config.model.conditional else model(perturbed_img, t)
-                pred = torch.argmax(pred, dim=1)
-                target = torch.argmax(target, dim=1)
 
                 # Create dir for epoch
                 this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
                 Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
 
                 # Save image
-                nrow = int(np.sqrt(img.shape[0]))
-                image_grid = make_grid(img, nrow, padding=2)
-                save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
+                save_sample_img(img, this_pred_dir, 'img.png')
 
                 if config.model.conditional:
                     # Save perturbed image
-                    nrow = int(np.sqrt(perturbed_img.shape[0]))
-                    image_grid = make_grid(perturbed_img, nrow, padding=2)
-                    save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
+                    save_sample_img(perturbed_img, this_pred_dir, 'pert.png')
 
                 # Save prediction and original map as color image
-                _save_map(pred, this_pred_dir, 'pred.png')
-                _save_map(target, this_pred_dir, 'mask.png')
+                save_colorful_images(pred, this_pred_dir, 'pred.png')
+                save_colorful_images(target, this_pred_dir, 'mask.png')
             logging.info(f'Images for epoch {epoch} saved')
 
-        #Evalutate model accuracy
+        # Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
             eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
                  sde=None if not config.model.conditional else sde)
@@ -262,25 +258,10 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
 
-
-def _save_map(map, save_dir, filename):
-    """
-    Saves a segmentation map as color image
-
-    :param mask: A mask in format (N, H, W) (not one-hot!)
-    :param filename: The name of the image file
-    :param save_dir: The directory to save to
-    """
-    mask_color = torch.zeros((map.shape[0], 3, map.shape[1], map.shape[2]))
-    for N in range(0, map.shape[0]):
-        for h in range(0, map.shape[1]):
-            for w in range(0, map.shape[2]):
-                color = trainId2Color[str(map[N, h, w].item())]
-                mask_color[N, 0, h, w] = color[0]
-                mask_color[N, 1, h, w] = color[1]
-                mask_color[N, 2, h, w] = color[2]
-    nrow = int(np.sqrt(mask_color.shape[0]))
-    image_grid = make_grid(mask_color, nrow, padding=2, normalize=True)
+def save_sample_img(samples, save_dir, filename):
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+    nrow = int(np.sqrt(samples.shape[0]))
+    image_grid = make_grid(samples, nrow, padding=2 if samples.shape[0] > 1 else 0, normalize=True)
     save_image(image_grid, os.path.join(save_dir, filename))
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
@@ -315,4 +296,3 @@ def _pixel_acc(pred, target):
     correct = (pred == target).sum()
     total = (target == target).sum()
     return correct / total
-
