@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 import os
 from PIL import Image
 from collections import namedtuple
-from os.path import exists, split
+from torchvision.utils import make_grid, save_image
 import torchvision.transforms.functional as F
 from random import randint
 import torch.nn.functional
@@ -171,10 +171,14 @@ def save_colorful_images(pred, output_dir, filename):
     If given a mini-batch tensor, will save the tensor as a grid of images.
     """
     pred = torch.argmax(pred, dim=1)
+    pred_cp = pred
     pred = pred.cpu().numpy()
-    im = Image.fromarray(CITYSCAPE_PALETTE[pred[0].squeeze()])
-    fn = os.path.join(output_dir, filename + '.png')
-    out_dir = split(fn)[0]
-    if not exists(out_dir):
-        os.makedirs(out_dir)
-    im.save(fn)
+    imgs = []
+    for i in range(pred_cp.shape[0]):
+        im = Image.fromarray(CITYSCAPE_PALETTE[pred[i].squeeze()])
+        imgs.append(F.to_tensor(im))
+
+    image = torch.cat(imgs, dim=0)
+    nrow = int(np.sqrt(image.shape[0]))
+    image_grid = make_grid(image, nrow, padding=2)
+    save_image(image_grid, os.path.join(output_dir, filename))

@@ -75,10 +75,7 @@ def train(config, workdir):
 
             # Conditioning on noise scales
             if config.model.conditional:
-                eps = 1e-5
-                t1 = (0.5 - 1) * torch.rand(int(img.shape[0] / 2), device=config.device) + 1
-                t2 = torch.rand(img.shape[0] - int(img.shape[0] / 2), device=config.device) * (1 - eps) + eps
-                t = torch.cat([t1, t2], dim=0)
+                t = (0.5 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
@@ -94,6 +91,7 @@ def train(config, workdir):
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
                 pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+                save_colorful_images(pred, '/export/home/tkuechle/', 'pred.png')
                 loss = loss_fn(pred, target)
                 loss.backward()
                 optimizer.step()
@@ -272,7 +270,7 @@ def _iou(pred, target, config):
     """
     ious = []
     for cls in range(config.data.n_labels):
-        pred_inds = pred == cls
+        pred_inds = pred == cl
         target_inds = target == cls
         intersection = pred_inds[target_inds].sum()
         union = pred_inds.sum() + target_inds.sum() - intersection
