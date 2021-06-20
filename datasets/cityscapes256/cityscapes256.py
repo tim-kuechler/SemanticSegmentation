@@ -144,7 +144,7 @@ class CITYSCAPES256(Dataset):
 # borrow functions and modify it from https://github.com/fyu/drn/blob/master/segment.py
 CITYSCAPE_PALETTE = np.asarray([
     [0, 0, 0],
-    [128, 64, 128]
+    [128, 64, 128],
     [244, 35, 232],
     [70, 70, 70],
     [102, 102, 156],
