@@ -43,7 +43,7 @@ def get_config_flickr():
     optim.lr = 2e-4
     optim.beta1 = 0.9
     optim.eps = 1e-8
-    optim.mixed_prec = False
+    optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -55,7 +55,7 @@ def get_config_cityscapes():
     # Training
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 5000
-    training.batch_size = 6
+    training.batch_size = 8
     training.log_freq = 12
     training.eval_freq = 500
     training.save_pred_freq = 5
@@ -84,7 +84,7 @@ def get_config_cityscapes():
     optim.lr = 2e-4
     optim.beta1 = 0.9
     optim.eps = 1e-8
-    optim.mixed_prec = False
+    optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
