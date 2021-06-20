@@ -91,7 +91,6 @@ def train(config, workdir):
             optimizer.zero_grad()
             if not config.optim.mixed_prec:
                 pred = model(img) if not config.model.conditional else model(perturbed_img, t)
-                save_colorful_images(pred, '/export/home/tkuechle/', 'pred.png')
                 loss = loss_fn(pred, target)
                 loss.backward()
                 optimizer.step()
