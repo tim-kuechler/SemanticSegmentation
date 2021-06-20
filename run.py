@@ -179,8 +179,8 @@ def train(config, workdir):
                     save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
 
                 # Save prediction and original map as color image
-                save_colorful_images(pred, this_pred_dir, 'pred.png')
-                save_colorful_images(target, this_pred_dir, 'mask.png')
+                #save_colorful_images(pred, this_pred_dir, 'pred.png')
+                #save_colorful_images(target, this_pred_dir, 'mask.png')
             logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
