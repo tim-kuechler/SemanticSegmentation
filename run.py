@@ -13,6 +13,7 @@ from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
 from datasets.cityscapes256.cityscapes256 import save_colorful_images
+from datasets.flickr.flickr import save_output_images
 import sde_lib
 
 
@@ -75,7 +76,7 @@ def train(config, workdir):
 
             # Conditioning on noise scales
             if config.model.conditional:
-                t = (0.5 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
+                t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
@@ -178,9 +179,15 @@ def train(config, workdir):
                     image_grid = make_grid(perturbed_img, nrow, padding=2)
                     save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
 
-                # Save prediction and original map as color image
-                #save_colorful_images(pred, this_pred_dir, 'pred.png')
-                #save_colorful_images(target, this_pred_dir, 'mask.png')
+                if config.data.dataset == 'cityscapes256':
+                    # Save prediction and original map as color image
+                    save_colorful_images(pred, this_pred_dir, 'pred.png')
+                    save_colorful_images(target, this_pred_dir, 'mask.png')
+                elif config.data.dataset == 'flickr':
+                    # Save prediction and original map as grayscale image
+                    save_output_images(pred, this_pred_dir, 'pred.png')
+                    save_output_images(target, this_pred_dir, 'mask.png')
+
             logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy

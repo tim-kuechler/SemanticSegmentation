@@ -2,6 +2,7 @@ import torch.nn.functional
 from torch.utils.data import Dataset
 import os
 from PIL import Image
+from torchvision.utils import make_grid, save_image
 import numpy as np
 import torchvision.transforms.functional as F
 from random import randint
@@ -70,4 +71,24 @@ class FLICKR(Dataset):
 
     def __len__(self):
         return len(self.images)
+
+# borrow functions and modify it from https://github.com/fyu/drn/blob/master/segment.py
+def save_output_images(pred, output_dir, filename):
+    """
+    Saves a given (B x C x H x W) into an image file.
+    If given a mini-batch tensor, will save the tensor as a grid of images.
+    """
+
+    pred = torch.argmax(pred, dim=1)
+    pred_cp = pred
+    pred = pred.cpu().numpy()
+    imgs = []
+    for i in range(pred_cp.shape[0]):
+        im = Image.fromarray(pred[i].astype(np.uint8))
+        imgs.append(torch.unsqueeze(F.to_tensor(im), dim=0))
+
+    image = torch.cat(imgs, dim=0)
+    nrow = int(np.sqrt(image.shape[0]))
+    image_grid = make_grid(image, nrow, padding=2)
+    save_image(image_grid, os.path.join(output_dir, filename))
 
