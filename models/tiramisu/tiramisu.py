@@ -14,11 +14,6 @@ class FCDenseNet103(nn.Module):
         self.up_blocks = up_blocks = (12,10,7,5,4)
         skip_connection_channel_counts = []
 
-        self.gaussian = GaussianFourierProjection(128, 16)
-        self.linear1 = nn.Linear(256, 512)
-        self.linear2 = nn.Linear(512, 512)
-        self.act = nn.SiLU()
-
         ## First Convolution ##
         self.add_module('firstconv', nn.Conv2d(in_channels=in_channels,
                   out_channels=out_chans_first_conv, kernel_size=3,
@@ -73,16 +68,20 @@ class FCDenseNet103(nn.Module):
                                    padding=0, bias=True)
         self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, x, noise=None):
-        temb = self.gaussian(torch.log(noise))
-        temb = self.linear1(temb)
-        temb = self.linear2(self.act(temb))
-
+    def forward(self, x, timesteps=None):
+        if timesteps is not None:
+            # Combine x and timesteps
+            timesteps = torch.unsqueeze(timesteps, -1)
+            timesteps = torch.unsqueeze(timesteps, -1)
+            timesteps = timesteps.expand(timesteps.shape[0], 1, x.shape[2])
+            timesteps = torch.unsqueeze(timesteps, -1)
+            timesteps = timesteps.expand(timesteps.shape[0], 1, x.shape[2], x.shape[3])
+            x = torch.cat([x, timesteps], dim=1)
         out = self.firstconv(x)
 
         skip_connections = []
         for i in range(len(self.down_blocks)):
-            out = self.denseBlocksDown[i](out, temb)
+            out = self.denseBlocksDown[i](out)
             skip_connections.append(out)
             out = self.transDownBlocks[i](out)
 
@@ -90,7 +89,7 @@ class FCDenseNet103(nn.Module):
         for i in range(len(self.up_blocks)):
             skip = skip_connections.pop()
             out = self.transUpBlocks[i](out, skip)
-            out = self.denseBlocksUp[i](out, temb)
+            out = self.denseBlocksUp[i](out)
 
         out = self.finalConv(out)
         out = self.softmax(out)

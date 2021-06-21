@@ -3,18 +3,6 @@ import torch
 import torch.nn as nn
 
 
-class GaussianFourierProjection(nn.Module):
-  """Gaussian Fourier embeddings for noise levels."""
-
-  def __init__(self, embedding_size=256, scale=1.0):
-    super().__init__()
-    self.W = nn.Parameter(torch.randn(embedding_size) * scale, requires_grad=False)
-
-  def forward(self, x):
-    x_proj = x[:, None] * self.W[None, :] * 2 * np.pi
-    return torch.cat([torch.sin(x_proj), torch.cos(x_proj)], dim=-1)
-
-
 class DenseLayer(nn.Sequential):
     def __init__(self, in_channels, growth_rate):
         super().__init__()
@@ -32,14 +20,11 @@ class DenseBlock(nn.Module):
     def __init__(self, in_channels, growth_rate, n_layers, upsample=False):
         super().__init__()
         self.upsample = upsample
-        self.Dense_0 = nn.Linear(512, in_channels)
-        self.act = nn.SiLU()
         self.layers = nn.ModuleList([DenseLayer(
             in_channels + i*growth_rate, growth_rate)
             for i in range(n_layers)])
 
-    def forward(self, x, temb):
-        x += self.Dense_0(self.act(temb))[:, :, None, None]
+    def forward(self, x):
         if self.upsample:
             new_features = []
             #we pass all previous activations into each dense layer normally
@@ -85,15 +70,14 @@ class TransitionUp(nn.Module):
         return out
 
 
-class Bottleneck(nn.Module):
+class Bottleneck(nn.Sequential):
     def __init__(self, in_channels, growth_rate, n_layers):
         super().__init__()
-        self.bottleneck = DenseBlock(in_channels, growth_rate, n_layers, upsample=True)
+        self.add_module('bottleneck', DenseBlock(
+            in_channels, growth_rate, n_layers, upsample=True))
 
-
-    def forward(self, x, temb):
-        x = self.bottleneck(x, temb)
-        return x
+    def forward(self, x):
+        return super().forward(x)
 
 
 def center_crop(layer, max_height, max_width):
