@@ -69,7 +69,7 @@ def get_config_cityscapes():
     model.sigma_min = 0.01
     model.sigma_max = 338
     model.num_scales = 2000
-    model.conditional = False
+    model.conditional = True
     model.name = 'fcdense'
 
     # Data
