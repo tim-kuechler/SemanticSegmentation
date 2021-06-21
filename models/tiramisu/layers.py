@@ -1,6 +1,7 @@
 """FCDenseNet layers. Modified from https://github.com/bfortuner/pytorch_tiramisu"""
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 class GaussianFourierProjection(nn.Module):
