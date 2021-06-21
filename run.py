@@ -91,6 +91,7 @@ def train(config, workdir):
                     min[N] = torch.min(perturbed_img[N, :, :, :])
                 perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
+                del img, mean, std, max, min, z
 
             #Training step
             optimizer.zero_grad()
@@ -128,10 +129,13 @@ def train(config, workdir):
                     with torch.no_grad():
                         eval_pred = model(eval_img)
                     tot_eval_loss += loss_fn(eval_pred, eval_target).item()
+                    del eval_img, eval_pred, eval_target
                 with open(os.path.join(workdir, 'eval_loss.txt'), 'a+') as eval_loss_file:
                     eval_loss_file.write(str(step) + '\t' + str(tot_eval_loss) + '\n')
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
+
+            del img, perturbed_img, t
 
         # FCDenseNet scheduler step
         if config.model.name == 'fcdense':
