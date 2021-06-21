@@ -135,7 +135,8 @@ def train(config, workdir):
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
-            del img, perturbed_img, t
+            del img
+            if config.model.conditional: del perturbed_img, t
 
         # FCDenseNet scheduler step
         if config.model.name == 'fcdense':
@@ -202,8 +203,7 @@ def train(config, workdir):
                     save_output_images(pred, this_pred_dir, 'pred.png')
                     save_output_images(target, this_pred_dir, 'mask.png')
 
-                del img
-                del target
+                del img, target
 
             logging.info(f'Images for epoch {epoch} saved')
 
