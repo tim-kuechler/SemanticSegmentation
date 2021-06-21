@@ -65,7 +65,11 @@ def train(config, workdir):
     loss_fn = losses.get_loss_fn(config)
 
     #Get scaler if mixed precision
-    scaler = None if not config.optim.mixed_prec else torch.cuda.amp.GradScaler()
+    scaler = torch.cuda.amp.GradScaler()
+
+    # Get step fn
+    step_fn_train = losses.get_step_fn(config, optimizer, model, loss_fn, sde if config.model.conditional else None, scaler, train=True)
+    step_fn_eval = losses.get_step_fn(config, optimizer, model, loss_fn, sde if config.model.conditional else None, scaler, train=False)
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -77,39 +81,12 @@ def train(config, workdir):
         for img, target in data_loader_train:
             img, target = img.to(config.device), target.to(config.device, dtype=torch.long)
 
-            # Conditioning on noise scales
-            if config.model.conditional:
-                #t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
-                t = torch.rand(int(img.shape[0]), device=config.device)
-                z = torch.randn_like(img)
-                mean, std = sde.marginal_prob(img, t)
-                perturbed_img = mean + std[:, None, None, None] * z
-                max = torch.ones(perturbed_img.shape[0], device=config.device)
-                min = torch.ones(perturbed_img.shape[0], device=config.device)
-                for N in range(perturbed_img.shape[0]):
-                    max[N] = torch.max(perturbed_img[N, :, :, :])
-                    min[N] = torch.min(perturbed_img[N, :, :, :])
-                perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
-                perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
-
-            #Training step
-            optimizer.zero_grad()
-            if not config.optim.mixed_prec:
-                pred = model(img) if not config.model.conditional else model(perturbed_img, t)
-                loss = loss_fn(pred, target)
-                loss.backward()
-                optimizer.step()
-            else:
-                with torch.cuda.amp.autocast():
-                    pred = model(img) if not config.model.conditional else model(perturbed_img, t)
-                    loss = loss_fn(pred, target)
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+            # Training step
+            loss, _ = step_fn_train(img, target)
             step += 1
 
             #Report training loss
-            loss_per_log_period += loss.detach().item()
+            loss_per_log_period += loss
             if step % config.training.log_freq == 0:
                 mean_loss = loss_per_log_period / config.training.log_freq
                 with open(os.path.join(workdir, 'training_loss.txt'), 'a+') as training_loss_file:
@@ -126,9 +103,8 @@ def train(config, workdir):
                     eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.long)
 
                     with torch.no_grad():
-                        eval_pred = model(eval_img)
-                    tot_eval_loss += loss_fn(eval_pred, eval_target).detach().item()
-                    del eval_img, eval_pred, eval_target
+                        loss_pred = step_fn_eval(eval_img, eval_target)
+                    tot_eval_loss += loss_pred
                 with open(os.path.join(workdir, 'eval_loss.txt'), 'a+') as eval_loss_file:
                     eval_loss_file.write(str(step) + '\t' + str(tot_eval_loss) + '\n')
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
@@ -152,52 +128,30 @@ def train(config, workdir):
 
         # Save some predictions
         if epoch % config.training.save_pred_freq == 0:
-            for i, (img, target) in enumerate(data_loader_eval):
-                img, target = img.to(config.device), target.to(config.device, dtype=torch.long)
-                if i == 1:
-                    break
-                model.eval()
+            img, target = next(data_loader_eval)
+            img, target = img.to(config.device), target.to(config.device, dtype=torch.long)
+            model.eval()
 
-                # Conditioning on noise scales
-                if config.model.conditional:
-                    eps = 1e-5
-                    t = torch.linspace(1, eps, img.shape[0], device=config.device)
-                    z = torch.randn_like(img)
-                    mean, std = sde.marginal_prob(img, t)
-                    perturbed_img = mean + std[:, None, None, None] * z
-                    max = torch.ones(perturbed_img.shape[0], device=config.device)
-                    min = torch.ones(perturbed_img.shape[0], device=config.device)
-                    for N in range(perturbed_img.shape[0]):
-                        max[N] = torch.max(perturbed_img[N, :, :, :])
-                        min[N] = torch.min(perturbed_img[N, :, :, :])
-                    perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
-                    perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
+            with torch.no_grad():
+                _, pred = step_fn_eval(img, target)
 
-                pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+            # Create dir for epoch
+            this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
+            Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
 
-                # Create dir for epoch
-                this_pred_dir = os.path.join(pred_dir, f'epoch_{epoch}')
-                Path(this_pred_dir).mkdir(parents=True, exist_ok=True)
+            # Save image
+            nrow = int(np.sqrt(img.shape[0]))
+            image_grid = make_grid(img, nrow, padding=2)
+            save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-                # Save image
-                nrow = int(np.sqrt(img.shape[0]))
-                image_grid = make_grid(img, nrow, padding=2)
-                save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
-
-                if config.model.conditional:
-                    # Save perturbed image
-                    nrow = int(np.sqrt(perturbed_img.shape[0]))
-                    image_grid = make_grid(perturbed_img, nrow, padding=2)
-                    save_image(image_grid, os.path.join(this_pred_dir, 'pert.png'))
-
-                if config.data.dataset == 'cityscapes256':
-                    # Save prediction and original map as color image
-                    save_colorful_images(pred, this_pred_dir, 'pred.png')
-                    save_colorful_images(target, this_pred_dir, 'mask.png')
-                elif config.data.dataset == 'flickr':
-                    # Save prediction and original map as grayscale image
-                    save_output_images(pred, this_pred_dir, 'pred.png')
-                    save_output_images(target, this_pred_dir, 'mask.png')
+            if config.data.dataset == 'cityscapes256':
+                # Save prediction and original map as color image
+                save_colorful_images(pred, this_pred_dir, 'pred.png')
+                save_colorful_images(target, this_pred_dir, 'mask.png')
+            elif config.data.dataset == 'flickr':
+                # Save prediction and original map as grayscale image
+                save_output_images(pred, this_pred_dir, 'pred.png')
+                save_output_images(target, this_pred_dir, 'mask.png')
 
             logging.info(f'Images for epoch {epoch} saved')
 
@@ -259,7 +213,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
             perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-        pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+        with torch.no_grad():
+            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()

@@ -60,3 +60,43 @@ def get_loss_fn(config):
         return F.binary_cross_entropy_with_logits
 
 
+def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=True):
+    def step_fn(img, target):
+        # Conditioning on noise scales
+        if config.model.conditional:
+            # t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
+            t = torch.rand(int(img.shape[0]), device=config.device)
+            z = torch.randn_like(img)
+            mean, std = sde.marginal_prob(img, t)
+            perturbed_img = mean + std[:, None, None, None] * z
+            max = torch.ones(perturbed_img.shape[0], device=config.device)
+            min = torch.ones(perturbed_img.shape[0], device=config.device)
+            for N in range(perturbed_img.shape[0]):
+                max[N] = torch.max(perturbed_img[N, :, :, :])
+                min[N] = torch.min(perturbed_img[N, :, :, :])
+            perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
+            perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
+
+        # Training step
+        if train:
+            optimizer.zero_grad()
+        if not config.optim.mixed_prec:
+            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+            loss = loss_fn(pred, target)
+            if train:
+                loss.backward()
+                optimizer.step()
+        else:
+            with torch.cuda.amp.autocast():
+                pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+                loss = loss_fn(pred, target)
+            if train:
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+
+        return loss.detach().item(), pred.detach()
+    return step_fn
+
+
+
