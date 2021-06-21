@@ -128,7 +128,7 @@ def train(config, workdir):
 
         # Save some predictions
         if epoch % config.training.save_pred_freq == 0:
-            img, target = next(data_loader_eval)
+            img, target = next(iter(data_loader_eval))
             img, target = img.to(config.device), target.to(config.device, dtype=torch.long)
             model.eval()
 
