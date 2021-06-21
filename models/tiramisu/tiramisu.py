@@ -5,7 +5,7 @@ from .layers import *
 class FCDenseNet103(nn.Module):
     def __init__(self, config):
         super().__init__()
-        in_channels = config.data.n_channels
+        in_channels = config.data.n_channels 
         n_classes = config.data.n_labels
         bottleneck_layers = 15
         growth_rate = 16
@@ -86,7 +86,7 @@ class FCDenseNet103(nn.Module):
             skip_connections.append(out)
             out = self.transDownBlocks[i](out)
 
-        out = self.bottleneck(out, temb)
+        out = self.bottleneck(out)
         for i in range(len(self.up_blocks)):
             skip = skip_connections.pop()
             out = self.transUpBlocks[i](out, skip)
