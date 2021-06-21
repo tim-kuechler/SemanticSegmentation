@@ -1,3 +1,4 @@
+"""FCDenseNet layers. Modified from https://github.com/bfortuner/pytorch_tiramisu"""
 import torch
 import torch.nn as nn
 

@@ -59,7 +59,7 @@ def get_config_cityscapes():
     training.batch_size = 16
     training.log_freq = 12
     training.eval_freq = 500
-    training.save_pred_freq = 5
+    training.save_pred_freq = 1
     training.full_eval_freq = 5
     training.checkpoint_save_freq = 15
     training.sde = 'vesde'
@@ -77,6 +77,7 @@ def get_config_cityscapes():
     data.dataset = 'cityscapes256'
     data.n_labels = 20
     data.n_channels = 3
+    data.crop = False
 
     # Optimization
     config.optim = optim = ml_collections.ConfigDict()
@@ -119,6 +120,7 @@ def get_config_cityscapes():
 #     data.dataset = 'cityscapes256'
 #     data.n_labels = 20
 #     data.n_channels = 3
+#     data.crop = True
 #
 #     # Optimization
 #     config.optim = optim = ml_collections.ConfigDict()
@@ -158,6 +160,7 @@ def get_config_cityscapes():
 #     data.dataset = 'cityscapes256'
 #     data.n_labels = 20
 #     data.n_channels = 3
+#     data.crop = True
 #
 #     # Optimization
 #     config.optim = optim = ml_collections.ConfigDict()

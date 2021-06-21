@@ -1,3 +1,4 @@
+"""FCDenseNet model. Modified from https://github.com/bfortuner/pytorch_tiramisu"""
 from .layers import *
 
 
@@ -62,12 +63,20 @@ class FCDenseNet103(nn.Module):
         cur_channels_count += growth_rate*up_blocks[-1]
 
 
-        ## Softmax ##
+        ## Softmax + Final Conv ##
         self.finalConv = nn.Conv2d(in_channels=cur_channels_count, out_channels=n_classes, kernel_size=1, stride=1,
                                    padding=0, bias=True)
         self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, x):
+    def forward(self, x, timesteps=None):
+        if timesteps is not None:
+            # Combine x and timesteps
+            timesteps = torch.unsqueeze(timesteps, -1)
+            timesteps = torch.unsqueeze(timesteps, -1)
+            timesteps = timesteps.expand(timesteps.shape[0], 1, x.shape[2])
+            timesteps = torch.unsqueeze(timesteps, -1)
+            timesteps = timesteps.expand(timesteps.shape[0], 1, x.shape[2], x.shape[3])
+            x = torch.cat([x, timesteps], dim=1)
         out = self.firstconv(x)
 
         skip_connections = []
