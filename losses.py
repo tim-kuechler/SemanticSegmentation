@@ -32,11 +32,11 @@ def get_cross_entropy_loss(config):
 
 def get_nll_loss(config):
     def nll_loss_cityscapes(pred, targets):
-        weights = torch.FloatTensor([0, 0.8373, 0.918, 0.866, 1.0345,
+        weights = torch.Tensor([0, 0.8373, 0.918, 0.866, 1.0345,
                                      1.0166, 0.9969, 0.9754, 1.0489,
                                      0.8786, 1.0023, 0.9539, 0.9843,
                                      1.1116, 0.9037, 1.0865, 1.0955,
-                                     1.0865, 1.1529, 1.0507])
+                                     1.0865, 1.1529, 1.0507], dtype=torch.float32, device=config.device)
         return F.nll_loss(pred, targets, weight=weights, ignore_index=0)
 
     def nll_loss_flickr(pred, targets):
