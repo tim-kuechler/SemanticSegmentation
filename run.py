@@ -87,11 +87,10 @@ def train(config, workdir):
                 max = torch.ones(perturbed_img.shape[0], device=config.device)
                 min = torch.ones(perturbed_img.shape[0], device=config.device)
                 for N in range(perturbed_img.shape[0]):
-                    max[N] = torch.max(perturbed_img[N,:,:,:])
+                    max[N] = torch.max(perturbed_img[N, :, :, :])
                     min[N] = torch.min(perturbed_img[N, :, :, :])
                 perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
                 perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
-                del img, mean, std, max, min, z
 
             #Training step
             optimizer.zero_grad()
@@ -110,7 +109,7 @@ def train(config, workdir):
             step += 1
 
             #Report training loss
-            loss_per_log_period += loss.item()
+            loss_per_log_period += loss.detach().item()
             if step % config.training.log_freq == 0:
                 mean_loss = loss_per_log_period / config.training.log_freq
                 with open(os.path.join(workdir, 'training_loss.txt'), 'a+') as training_loss_file:
@@ -128,15 +127,12 @@ def train(config, workdir):
 
                     with torch.no_grad():
                         eval_pred = model(eval_img)
-                    tot_eval_loss += loss_fn(eval_pred, eval_target).item()
+                    tot_eval_loss += loss_fn(eval_pred, eval_target).detach().item()
                     del eval_img, eval_pred, eval_target
                 with open(os.path.join(workdir, 'eval_loss.txt'), 'a+') as eval_loss_file:
                     eval_loss_file.write(str(step) + '\t' + str(tot_eval_loss) + '\n')
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
-
-            del img
-            if config.model.conditional: del perturbed_img, t
 
         # FCDenseNet scheduler step
         if config.model.name == 'fcdense':
@@ -202,8 +198,6 @@ def train(config, workdir):
                     # Save prediction and original map as grayscale image
                     save_output_images(pred, this_pred_dir, 'pred.png')
                     save_output_images(target, this_pred_dir, 'mask.png')
-
-                del img, target
 
             logging.info(f'Images for epoch {epoch} saved')
 

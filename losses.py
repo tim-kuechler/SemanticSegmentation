@@ -39,11 +39,11 @@ def get_nll_loss(config):
                                      1.1116, 0.9037, 1.0865, 1.0955,
                                      1.0865, 1.1529, 1.0507])
         weights = weights.to(config.device, dtype=torch.float32)
-        return F.nll_loss(pred, targets, weight=weights, ignore_index=0)
+        return F.nll_loss(pred, Variable(targets), weight=weights, ignore_index=0)
 
     def nll_loss_flickr(pred, targets):
         targets = torch.argmax(targets, dim=1)
-        return F.nll_loss(pred, targets)
+        return F.nll_loss(pred, Variable(targets))
 
     if config.data.dataset == 'cityscapes256':
         return nll_loss_cityscapes
