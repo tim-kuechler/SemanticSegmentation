@@ -32,6 +32,7 @@ def get_cross_entropy_loss(config):
 
 def get_nll_loss(config):
     def nll_loss_cityscapes(pred, targets):
+        targets = torch.argmax(targets, dim=1)
         weights = torch.Tensor([0, 0.8373, 0.918, 0.866, 1.0345,
                                      1.0166, 0.9969, 0.9754, 1.0489,
                                      0.8786, 1.0023, 0.9539, 0.9843,
@@ -41,6 +42,7 @@ def get_nll_loss(config):
         return F.nll_loss(pred, targets, weight=weights, ignore_index=0)
 
     def nll_loss_flickr(pred, targets):
+        targets = torch.argmax(targets, dim=1)
         return F.nll_loss(pred, targets)
 
     if config.data.dataset == 'cityscapes256':
