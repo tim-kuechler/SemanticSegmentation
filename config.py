@@ -56,7 +56,7 @@ def get_config_cityscapes():
     # Training
     config.training = training = ml_collections.ConfigDict()
     training.epochs = 5000
-    training.batch_size = 10
+    training.batch_size = 8
     training.log_freq = 20
     training.eval_freq = 500
     training.save_pred_freq = 1
@@ -85,7 +85,7 @@ def get_config_cityscapes():
     optim.lr = 1e-4
     optim.lr_decay = 0.995
     optim.step_size = 1
-    optim.mixed_prec = True
+    optim.mixed_prec = False
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
