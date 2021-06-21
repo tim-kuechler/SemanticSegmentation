@@ -198,6 +198,9 @@ def train(config, workdir):
                     save_output_images(pred, this_pred_dir, 'pred.png')
                     save_output_images(target, this_pred_dir, 'mask.png')
 
+                del img
+                del target
+
             logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
