@@ -81,14 +81,14 @@ def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=
         if train:
             optimizer.zero_grad()
         if not config.optim.mixed_prec:
-            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+            pred = model(img) if not config.model.conditional else model(perturbed_img, std)
             loss = loss_fn(pred, target)
             if train:
                 loss.backward()
                 optimizer.step()
         else:
             with torch.cuda.amp.autocast():
-                pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+                pred = model(img) if not config.model.conditional else model(perturbed_img, std)
                 loss = loss_fn(pred, target)
             if train:
                 scaler.scale(loss).backward()
