@@ -85,7 +85,7 @@ def get_config_cityscapes():
     optim.lr = 1e-4
     optim.lr_decay = 0.995
     optim.step_size = 1
-    optim.mixed_prec = False
+    optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
