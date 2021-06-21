@@ -3,6 +3,7 @@ import torch.nn as nn
 import os
 from pathlib import Path
 from models.unet.unet import UNet
+from models.tiramisu.tiramisu import FCDenseNet103
 import datasets.datasets as data_loader
 import logging
 import time
@@ -25,6 +26,8 @@ def train(config, workdir):
     # Initialize model and optimizer
     if config.model.name == 'unet':
         model = UNet(config)
+    elif config.model.name == 'fcdense':
+        model = FCDenseNet103(config)
     elif config.model.name == 'fcn':
         assert config.model.conditional == False, "FCN can only be trained unconditionally"
         assert config.data.n_channels == 3, "FCN can only be trained on 3 channel images"
@@ -61,7 +64,7 @@ def train(config, workdir):
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
 
-    #Get step function
+    #Get scaler if mixed precision
     scaler = None if not config.optim.mixed_prec else torch.cuda.amp.GradScaler()
 
     logging.info(f'Starting training loop at epoch {epoch}')
@@ -76,7 +79,8 @@ def train(config, workdir):
 
             # Conditioning on noise scales
             if config.model.conditional:
-                t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
+                #t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
+                t = torch.rand(int(img.shape[0]), device=config.device)
                 z = torch.randn_like(img)
                 mean, std = sde.marginal_prob(img, t)
                 perturbed_img = mean + std[:, None, None, None] * z
@@ -129,15 +133,21 @@ def train(config, workdir):
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')
                 model.train()
 
+        # FCDenseNet scheduler step
+        if config.model.name == 'fcdense':
+            new_lr = config.optim.lr * (config.optim.lr_decay ** (epoch // config.optim.step_size))
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = new_lr
+
+        # FCN scheduler step
+        if config.model.name == 'fcn':
+            scheduler.step()
+
         # Save the checkpoint.
         logging.info(f'Saving checkpoint of epoch {epoch}')
         if epoch % config.training.checkpoint_save_freq == 0:
             utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, f'checkpoint_{epoch}.pth'))
         utils.save_checkpoint(optimizer, model, epoch, os.path.join(checkpoint_dir, 'curr_cpt.pth'))
-
-        # FCN scheduler step
-        if config.model.name == 'fcn':
-            scheduler.step()
 
         # Save some predictions
         if epoch % config.training.save_pred_freq == 0:
@@ -206,6 +216,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
         if config.model.name == 'unet':
             model = UNet(config)
+        elif config.model.name == 'fcdense':
+            model = FCDenseNet103(config)
         elif config.model.name == 'fcn':
             vgg_model = vgg_net.VGGNet()
             model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
@@ -276,7 +288,7 @@ def _iou(pred, target, config):
     """
     ious = []
     for cls in range(config.data.n_labels):
-        pred_inds = pred == cl
+        pred_inds = pred == cls
         target_inds = target == cls
         intersection = pred_inds[target_inds].sum()
         union = pred_inds.sum() + target_inds.sum() - intersection
