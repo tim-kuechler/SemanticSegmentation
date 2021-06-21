@@ -75,7 +75,7 @@ def train(config, workdir):
         model.train()
 
         for img, target in data_loader_train:
-            img, target = img.to(config.device), target.to(config.device, dtype=torch.float32)
+            img, target = img.to(config.device), target.to(config.device, dtype=torch.long)
 
             # Conditioning on noise scales
             if config.model.conditional:
@@ -123,7 +123,7 @@ def train(config, workdir):
                 tot_eval_loss = 0
 
                 for eval_img, eval_target in data_loader_eval:
-                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.float32)
+                    eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.long)
 
                     with torch.no_grad():
                         eval_pred = model(eval_img)
