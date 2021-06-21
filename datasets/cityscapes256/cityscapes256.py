@@ -5,6 +5,7 @@ from PIL import Image
 from collections import namedtuple
 from torchvision.utils import make_grid, save_image
 import torchvision.transforms.functional as F
+import torchvision.transforms as TT
 from random import randint
 import torch.nn.functional
 import numpy as np
@@ -124,6 +125,10 @@ class CITYSCAPES256(Dataset):
         target = F.to_tensor(target) * 255
         target = target.long()
         target = torch.squeeze(target, dim=0)
+
+        if torch.rand(1) < 0.5:
+            image = F.hflip(image)
+            target = F.hflip(image)
 
         #Change labels in target to train ids
         for h in range(target.shape[0]):
