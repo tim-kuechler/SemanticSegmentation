@@ -5,7 +5,7 @@ from .layers import *
 class FCDenseNet103(nn.Module):
     def __init__(self, config):
         super().__init__()
-        in_channels = config.data.n_channels + (1 if config.model.conditional else 0)
+        in_channels = config.data.n_channels 
         n_classes = config.data.n_labels
         bottleneck_layers = 15
         growth_rate = 16
