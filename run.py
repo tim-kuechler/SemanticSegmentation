@@ -103,8 +103,8 @@ def train(config, workdir):
                     eval_img, eval_target = eval_img.to(config.device), eval_target.to(config.device, dtype=torch.long)
 
                     with torch.no_grad():
-                        loss_pred = step_fn_eval(eval_img, eval_target)
-                    tot_eval_loss += loss_pred
+                        pred_loss, _ = step_fn_eval(eval_img, eval_target)
+                    tot_eval_loss += pred_loss
                 with open(os.path.join(workdir, 'eval_loss.txt'), 'a+') as eval_loss_file:
                     eval_loss_file.write(str(step) + '\t' + str(tot_eval_loss) + '\n')
                 logging.info(f'step: {step} (epoch: {epoch}), eval_loss: {tot_eval_loss / len(data_loader_eval)}')

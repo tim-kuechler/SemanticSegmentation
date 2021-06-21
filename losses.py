@@ -95,7 +95,7 @@ def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=
                 scaler.step(optimizer)
                 scaler.update()
 
-        return loss.detach().item(), pred.detach()
+        return loss.detach().item(), pred.detach().cpu()
     return step_fn
 
 
