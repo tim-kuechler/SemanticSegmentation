@@ -36,7 +36,8 @@ def get_nll_loss(config):
                                      1.0166, 0.9969, 0.9754, 1.0489,
                                      0.8786, 1.0023, 0.9539, 0.9843,
                                      1.1116, 0.9037, 1.0865, 1.0955,
-                                     1.0865, 1.1529, 1.0507], dtype=torch.float32, device=config.device)
+                                     1.0865, 1.1529, 1.0507])
+        weights = weights.to(config.device, dtype=torch.float32)
         return F.nll_loss(pred, targets, weight=weights, ignore_index=0)
 
     def nll_loss_flickr(pred, targets):
