@@ -130,6 +130,8 @@ class CITYSCAPES256(Dataset):
             image = F.hflip(image)
             target = F.hflip(image)
 
+        print(target.size())
+
         #Change labels in target to train ids
         for h in range(target.shape[0]):
             for w in range(target.shape[1]):
