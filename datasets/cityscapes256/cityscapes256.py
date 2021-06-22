@@ -128,9 +128,7 @@ class CITYSCAPES256(Dataset):
 
         if torch.rand(1) < 0.5:
             image = F.hflip(image)
-            target = F.hflip(image)
-
-        print(target.size())
+            target = F.hflip(target)
 
         #Change labels in target to train ids
         for h in range(target.shape[0]):
