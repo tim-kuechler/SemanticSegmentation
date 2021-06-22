@@ -48,6 +48,11 @@ def train(config, workdir):
     checkpoint_dir = os.path.join(workdir, 'checkpoints')
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
+    # Check for latest checkpoint
+    if os.path.isfile(os.path.join(checkpoint_dir, 'curr_cpt.pth')):
+        utils.restore_checkpoint(optimizer, model, os.path.join(checkpoint_dir, 'curr_cpt.pth'))
+        logging.info('Checkpoint restored')
+
     # Create pred image directory
     pred_dir = os.path.join(workdir, 'pred_img')
     Path(pred_dir).mkdir(parents=True, exist_ok=True)
