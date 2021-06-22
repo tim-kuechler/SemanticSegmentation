@@ -65,7 +65,11 @@ def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=
         # Conditioning on noise scales
         if config.model.conditional:
             # t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
-            t = torch.rand(int(img.shape[0]), device=config.device)
+            eps = 1e-5
+            if train:
+                t = torch.rand(int(img.shape[0]), device=config.device) * (1 - eps) + eps
+            else:
+                t = torch.linspace(1, eps, img.shape[0], device=config.device)
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
