@@ -41,12 +41,17 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 1
+    epoch = 60
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
     checkpoint_dir = os.path.join(workdir, 'checkpoints')
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
+
+    # Check for latest checkpoint
+    if os.path.isfile(os.path.join(checkpoint_dir, 'curr_cpt.pth')):
+        utils.restore_checkpoint(optimizer, model,os.path.join(checkpoint_dir, 'curr_cpt.pth'))
+        logging.info('Checkpoint restored')
 
     # Create pred image directory
     pred_dir = os.path.join(workdir, 'pred_img')
