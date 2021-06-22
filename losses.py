@@ -67,7 +67,7 @@ def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=
             eps = 1e-5
             # t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
             if train:
-                t = torch.rand(int(img.shape[0]), device=config.device) * (sde.T - eps) + eps
+                t = torch.rand(int(img.shape[0]), device=config.device) * (1 - eps) + eps
             else:
                 t = torch.linspace(1, eps, img.shape[0], device=config.device)
             z = torch.randn_like(img)
