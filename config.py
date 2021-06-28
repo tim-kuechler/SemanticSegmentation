@@ -91,8 +91,8 @@ def get_config(dataset):
 #
 #     return config
 
-#Unet
-def get_config_cityscapes():
+#Unet flickr
+def get_config_flickr():
     config = ml_collections.ConfigDict()
 
     # Training
