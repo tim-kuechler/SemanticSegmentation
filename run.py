@@ -41,7 +41,7 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 51
+    epoch = 0
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
@@ -219,7 +219,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
         with torch.no_grad():
-            pred = model(img) if not config.model.conditional else model(perturbed_img, std)
+            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()
