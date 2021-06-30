@@ -41,7 +41,7 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 0
+    epoch = 1
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
