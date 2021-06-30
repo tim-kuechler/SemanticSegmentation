@@ -26,7 +26,7 @@ class ADE20K(Dataset):
         self.targets_dir = os.path.join(self.root, 'annotations', split)
         self.images = []
         self.targets = []
-        self.n_labels = 150
+        self.n_labels = 151
         self.crop = crop
 
 
@@ -65,7 +65,6 @@ class ADE20K(Dataset):
         target = target.long()
         target = torch.squeeze(target, dim=0)
 
-        print(torch.min(target), torch.max(target))
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
 
         return image, target
@@ -77,7 +76,6 @@ class ADE20K(Dataset):
 # Code beneath borrowed and adaped from https://github.com/CSAILVision/semantic-segmentation-pytorch
 def save_colorful_images(pred, output_dir, filename):
     # print predictions in descending order
-    pred = torch.add(pred, 1)
     pred = np.int32(pred.detach().cpu().numpy())
 
     # colorize prediction

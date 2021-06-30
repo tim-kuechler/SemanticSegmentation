@@ -163,7 +163,7 @@ def get_config_ade20k():
     # Data
     config.data = data = ml_collections.ConfigDict()
     data.dataset = 'ade20k'
-    data.n_labels = 150
+    data.n_labels = 151
     data.n_channels = 3
     data.crop = True
 
