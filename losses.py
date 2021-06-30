@@ -49,6 +49,8 @@ def get_nll_loss(config):
         return nll_loss_cityscapes
     elif config.data.dataset == 'flickr':
         return nll_loss_flickr
+    elif config.data.dataset == 'ade20k':
+        return nll_loss_flickr
 
 
 def get_loss_fn(config):

@@ -20,7 +20,7 @@ def get_parser(**parser_kwargs):
     )
     parser.add_argument(
         'dataset',
-        help='cityscapes or flickr',
+        help='cityscapes or flickr or ade20k',
     )
     parser.add_argument(
         'mode',
