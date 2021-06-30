@@ -76,6 +76,7 @@ class ADE20K(Dataset):
 # Code beneath borrowed and adaped from https://github.com/CSAILVision/semantic-segmentation-pytorch
 def save_colorful_images(pred, output_dir, filename):
     # print predictions in descending order
+    pred = torch.add(pred, 1)
     pred = np.int32(pred.detach().cpu().numpy())
 
     # colorize prediction
