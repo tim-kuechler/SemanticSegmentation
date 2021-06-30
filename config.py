@@ -151,7 +151,6 @@ def get_config_ade20k():
     training.checkpoint_save_freq = 10
     training.sde = 'vesde'
 
-    # Model
     config.model = model = ml_collections.ConfigDict()
     model.sigma_min = 0.01
     model.sigma_max = 394
