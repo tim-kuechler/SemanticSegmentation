@@ -65,7 +65,7 @@ class ADE20K(Dataset):
         target = target.long()
         target = torch.squeeze(target, dim=0)
 
-        target = torch.nn.functional.one_hot(target, num_classes=self.n_labels + 1).permute(2, 0, 1)
+        target = torch.nn.functional.one_hot(torch.subtract(target, 1), num_classes=self.n_labels).permute(2, 0, 1)
 
         return image, target
 
