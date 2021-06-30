@@ -13,7 +13,8 @@ from torch.optim import lr_scheduler
 from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
-from datasets.cityscapes256.cityscapes256 import save_colorful_images
+import datasets.cityscapes256.cityscapes256 as cityscapes256
+import datasets.ade20k.ade20k as ade20k
 from datasets.flickr.flickr import save_output_images
 import sde_lib
 
@@ -151,8 +152,12 @@ def train(config, workdir):
 
             if config.data.dataset == 'cityscapes256':
                 # Save prediction and original map as color image
-                save_colorful_images(pred, this_pred_dir, 'pred.png')
-                save_colorful_images(target, this_pred_dir, 'mask.png')
+                cityscapes256.save_colorful_images(pred, this_pred_dir, 'pred.png')
+                cityscapes256.save_colorful_images(target, this_pred_dir, 'mask.png')
+            elif config.data.dataset == 'ade20k':
+                # Save prediction and original map as color image
+                ade20k.save_colorful_images(pred, this_pred_dir, 'pred.png')
+                ade20k.save_colorful_images(target, this_pred_dir, 'mask.png')
             elif config.data.dataset == 'flickr':
                 # Save prediction and original map as grayscale image
                 save_output_images(pred, this_pred_dir, 'pred.png')

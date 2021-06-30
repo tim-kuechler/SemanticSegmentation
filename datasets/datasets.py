@@ -1,6 +1,8 @@
 from torch.utils.data import DataLoader
 from datasets.flickr.flickr import FLICKR
 from datasets.cityscapes256.cityscapes256 import CITYSCAPES256
+from datasets.ade20k.ade20k import ADE20K
+
 
 
 def get_dataset(config):
