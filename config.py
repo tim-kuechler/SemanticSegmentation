@@ -7,6 +7,8 @@ def get_config(dataset):
         return get_config_flickr()
     elif dataset == 'cityscapes':
         return get_config_cityscapes()
+    elif dataset == 'ade20k':
+        return get_config_ade20k()
 
 # def get_config_flickr():
 #     config = ml_collections.ConfigDict()
@@ -134,48 +136,91 @@ def get_config_flickr():
 
     return config
 
-# #Unet cityscapes
-# def get_config_cityscapes():
-#     config = ml_collections.ConfigDict()
-#
-#     # Training
-#     config.training = training = ml_collections.ConfigDict()
-#     training.epochs = 5000
-#     training.batch_size = 8
-#     training.log_freq = 12
-#     training.eval_freq = 500
-#     training.save_pred_freq = 1
-#     training.full_eval_freq = 5
-#     training.checkpoint_save_freq = 15
-#     training.sde = 'vesde'
-#
-#     # Model
-#     config.model = model = ml_collections.ConfigDict()
-#     model.sigma_min = 0.01
-#     model.sigma_max = 338
-#     model.num_scales = 2000
-#     model.bilinear = True
-#     model.conditional = True
-#     model.name = 'unet'
-#
-#     # Data
-#     config.data = data = ml_collections.ConfigDict()
-#     data.dataset = 'cityscapes256'
-#     data.n_labels = 20
-#     data.n_channels = 3
-#     data.crop = True
-#
-#     # Optimization
-#     config.optim = optim = ml_collections.ConfigDict()
-#     optim.weight_decay = 0
-#     optim.lr = 2e-4
-#     optim.beta1 = 0.9
-#     optim.eps = 1e-8
-#     optim.mixed_prec = False
-#
-#     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-#
-#     return config
+#Unet ade20k
+def get_config_ade20k():
+    config = ml_collections.ConfigDict()
+
+    # Training
+    config.training = training = ml_collections.ConfigDict()
+    training.epochs = 5000
+    training.batch_size = 8
+    training.log_freq = 50
+    training.eval_freq = 500
+    training.save_pred_freq = 1
+    training.full_eval_freq = 2
+    training.checkpoint_save_freq = 10
+    training.sde = 'vesde'
+
+    # Model
+    config.model = model = ml_collections.ConfigDict()
+    model.sigma_min = 0.01
+    model.sigma_max = 394
+    model.num_scales = 2000
+    model.bilinear = True
+    model.conditional = True
+    model.name = 'unet'
+
+    # Data
+    config.data = data = ml_collections.ConfigDict()
+    data.dataset = 'ade20k'
+    data.n_labels = 150
+    data.n_channels = 3
+    data.crop = True
+
+    # Optimization
+    config.optim = optim = ml_collections.ConfigDict()
+    optim.weight_decay = 0
+    optim.lr = 2e-4
+    optim.beta1 = 0.9
+    optim.eps = 1e-8
+    optim.mixed_prec = False
+
+    config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+
+    return config
+
+#Unet cityscapes
+def get_config_cityscapes():
+    config = ml_collections.ConfigDict()
+
+    # Training
+    config.training = training = ml_collections.ConfigDict()
+    training.epochs = 5000
+    training.batch_size = 8
+    training.log_freq = 12
+    training.eval_freq = 500
+    training.save_pred_freq = 1
+    training.full_eval_freq = 5
+    training.checkpoint_save_freq = 15
+    training.sde = 'vesde'
+
+    # Model
+    config.model = model = ml_collections.ConfigDict()
+    model.sigma_min = 0.01
+    model.sigma_max = 338
+    model.num_scales = 2000
+    model.bilinear = True
+    model.conditional = True
+    model.name = 'unet'
+
+    # Data
+    config.data = data = ml_collections.ConfigDict()
+    data.dataset = 'cityscapes256'
+    data.n_labels = 20
+    data.n_channels = 3
+    data.crop = True
+
+    # Optimization
+    config.optim = optim = ml_collections.ConfigDict()
+    optim.weight_decay = 0
+    optim.lr = 2e-4
+    optim.beta1 = 0.9
+    optim.eps = 1e-8
+    optim.mixed_prec = False
+
+    config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+
+    return config
 
 
 # #FCN

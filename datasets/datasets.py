@@ -18,5 +18,10 @@ def get_dataset(config):
         dataset_eval = CITYSCAPES256(root='/export/data/tkuechle/datasets/cityscapes_full', split='val', mode='fine',
                                      crop=config.data.crop)
         data_loader_eval = DataLoader(dataset_eval, batch_size=batch_size, shuffle=True, num_workers=4)
+    if config.data.dataset == 'ade20k':
+        dataset_train = ADE20K('/export/data/tkuechle/datasets/ade20k', train=True, crop=True)
+        data_loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=4)
+        dataset_eval = ADE20K('/export/data/tkuechle/datasets/ade20k', train=False, crop=True)
+        data_loader_eval = DataLoader(dataset_eval, batch_size=batch_size, shuffle=False, num_workers=4)
 
     return data_loader_train, data_loader_eval
