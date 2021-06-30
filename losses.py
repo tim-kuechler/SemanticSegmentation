@@ -29,6 +29,8 @@ def get_cross_entropy_loss(config):
         return cross_entropy_one_hot_cityscapes
     elif config.data.dataset == 'flickr':
         return cross_entropy_one_hot_flickr
+    if config.data.dataset == 'ade20k':
+        return cross_entropy_one_hot_flickr
 
 def get_nll_loss(config):
     def nll_loss_cityscapes(pred, targets):
