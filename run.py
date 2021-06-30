@@ -158,6 +158,7 @@ def train(config, workdir):
                 # Save prediction and original map as color image
                 #ade20k.save_colorful_images(pred, this_pred_dir, 'pred.png')
                 #ade20k.save_colorful_images(target, this_pred_dir, 'mask.png')
+                pass
             elif config.data.dataset == 'flickr':
                 # Save prediction and original map as grayscale image
                 save_output_images(pred, this_pred_dir, 'pred.png')
