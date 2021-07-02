@@ -14,7 +14,6 @@ from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
 import datasets.cityscapes256.cityscapes256 as cityscapes256
-import datasets.ade20k.ade20k as ade20k
 from datasets.flickr.flickr import save_output_images
 import sde_lib
 
@@ -216,16 +215,16 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
-            max = torch.ones(perturbed_img.shape[0], device=config.device)
-            min = torch.ones(perturbed_img.shape[0], device=config.device)
-            for N in range(perturbed_img.shape[0]):
-                max[N] = torch.max(perturbed_img[N, :, :, :])
-                min[N] = torch.min(perturbed_img[N, :, :, :])
-            perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
-            perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
+            #max = torch.ones(perturbed_img.shape[0], device=config.device)
+            #min = torch.ones(perturbed_img.shape[0], device=config.device)
+            #for N in range(perturbed_img.shape[0]):
+            #    max[N] = torch.max(perturbed_img[N, :, :, :])
+            #    min[N] = torch.min(perturbed_img[N, :, :, :])
+            #perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
+            #perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
         with torch.no_grad():
-            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+            pred = model(img) if not config.model.conditional else model(perturbed_img, std)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()
