@@ -26,7 +26,7 @@ def get_cross_entropy_loss(config):
         return F.cross_entropy(pred, Variable(targets))
 
     if config.data.dataset == 'cityscapes256':
-        return cross_entropy_one_hot_cityscapes
+        return cross_entropy_one_hot_flickr
     elif config.data.dataset == 'flickr':
         return cross_entropy_one_hot_flickr
     if config.data.dataset == 'ade20k':
@@ -48,7 +48,7 @@ def get_nll_loss(config):
         return F.nll_loss(pred, Variable(targets))
 
     if config.data.dataset == 'cityscapes256':
-        return nll_loss_cityscapes
+        return nll_loss_flickr
     elif config.data.dataset == 'flickr':
         return nll_loss_flickr
     elif config.data.dataset == 'ade20k':
@@ -69,21 +69,21 @@ def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=
         # Conditioning on noise scales
         if config.model.conditional:
             # t = (0.4 - 1) * torch.rand(int(img.shape[0]), device=config.device) + 1
-            eps = 1e-5
+            start_noise = config.training.start_noise
             if train:
-                t = torch.rand(int(img.shape[0]), device=config.device) * (1 - eps) + eps
+                t = torch.rand(int(img.shape[0]), device=config.device) * (1 - start_noise) + start_noise
             else:
-                t = torch.linspace(1, eps, img.shape[0], device=config.device)
+                t = torch.linspace(1, start_noise, img.shape[0], device=config.device)
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
-            #max = torch.ones(perturbed_img.shape[0], device=config.device)
-            #min = torch.ones(perturbed_img.shape[0], device=config.device)
-            #for N in range(perturbed_img.shape[0]):
-            #    max[N] = torch.max(perturbed_img[N, :, :, :])
-            #    min[N] = torch.min(perturbed_img[N, :, :, :])
-            #perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
-            #perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
+            max = torch.ones(perturbed_img.shape[0], device=config.device)
+            min = torch.ones(perturbed_img.shape[0], device=config.device)
+            for N in range(perturbed_img.shape[0]):
+                max[N] = torch.max(perturbed_img[N, :, :, :])
+                min[N] = torch.min(perturbed_img[N, :, :, :])
+            perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
+            perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
         # Training step
         if train:

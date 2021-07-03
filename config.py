@@ -192,6 +192,7 @@ def get_config_cityscapes():
     training.full_eval_freq = 5
     training.checkpoint_save_freq = 15
     training.sde = 'vesde'
+    training.start_noise=0.8
 
     # Model
     config.model = model = ml_collections.ConfigDict()
