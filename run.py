@@ -211,7 +211,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         # Conditioning on noise scales
         if config.model.conditional:
             if timestep is None:
-                t = torch.linspace(1, config.training.start_noise, img.shape[0], device=config.device)
+                eps = 1e-5
+                t = torch.linspace(eps, config.training.start_noise, img.shape[0], device=config.device)
             else:
                 t = torch.ones_like(img.shape[0]) * timestep
             z = torch.randn_like(img)
