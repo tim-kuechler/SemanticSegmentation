@@ -23,16 +23,16 @@ class UNet(nn.Module):
         self.up4 = Up(128, 64, self.bilinear)
         self.outc = nn.Conv2d(64, self.n_classes, kernel_size=1)
 
-    def forward(self, x, timesteps=None):
-        if timesteps is not None:
+    def forward(self, x, noise=None):
+        if noise is not None:
             # Combine x and timesteps
-            #noise = torch.log(noise)
-            timesteps = torch.unsqueeze(timesteps, -1)
-            timesteps = torch.unsqueeze(timesteps, -1)
-            timesteps = timesteps.expand(timesteps.shape[0], 1, x.shape[2])
-            timesteps = torch.unsqueeze(timesteps, -1)
-            timesteps = timesteps.expand(timesteps.shape[0], 1, x.shape[2], x.shape[3])
-            x = torch.cat([x, timesteps], dim=1)
+            noise = torch.log(noise)
+            noise = torch.unsqueeze(noise, -1)
+            noise = torch.unsqueeze(noise, -1)
+            noise = noise.expand(noise.shape[0], 1, x.shape[2])
+            noise = torch.unsqueeze(noise, -1)
+            noise = noise.expand(noise.shape[0], 1, x.shape[2], x.shape[3])
+            x = torch.cat([x, noise], dim=1)
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
