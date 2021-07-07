@@ -234,10 +234,15 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
             perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
-        print(std)
         with torch.no_grad():
             pred = model(img) if not config.model.conditional else model(perturbed_img, std)
 
+        nrow = int(np.sqrt(img.shape[0]))
+        image_grid = make_grid(img, nrow, padding=2)
+        save_image(image_grid, os.path.join(workdir, 'image.png'))
+        nrow = int(np.sqrt(img.shape[0]))
+        image_grid = make_grid(perturbed_img, nrow, padding=2)
+        save_image(image_grid, os.path.join(workdir, 'image_p.png'))
         cityscapes256.save_colorful_images(pred, workdir, 'pred.png')
 
         pred = torch.argmax(pred, dim=1).cpu().numpy()
