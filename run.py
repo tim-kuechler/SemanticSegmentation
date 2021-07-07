@@ -234,6 +234,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
             perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
+        print(std)
         with torch.no_grad():
             pred = model(img) if not config.model.conditional else model(perturbed_img, std)
 
