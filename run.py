@@ -177,6 +177,7 @@ def train(config, workdir):
 
 def experiment(config, workdir):
     for t in np.linspace(1., 0., 21):
+        print('Starting timestep: ', t)
         iou, acc = eval(config, workdir, timestep=t, save_to_file=False)
         with open(os.path.join(workdir, 'experiment.txt'), 'a+') as exp_file:
             exp_file.write(str(t) + '\t' + str(acc) + '\t' + str(iou) + '\n')
@@ -221,7 +222,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
                 eps = 1e-5
                 t = torch.linspace(eps, config.training.start_noise, img.shape[0], device=config.device)
             else:
-                t = torch.ones_like(img.shape[0]) * timestep
+                t = torch.mul(torch.ones_like(img.shape[0]), timestep)
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z
