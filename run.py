@@ -186,7 +186,7 @@ def experiment(config, workdir):
 def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None, timestep=None, save_to_file=True):
     if not while_training:
         # Load model
-        loaded_state = torch.load(os.path.join(workdir, 'checkpoints', 'checkpoint_210.pth'), map_location=config.device)
+        loaded_state = torch.load(os.path.join(workdir, 'checkpoints', 'curr_cpt.pth'), map_location=config.device)
         if config.model.name == 'unet':
             model = UNet(config)
         elif config.model.name == 'fcdense':
@@ -195,6 +195,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             vgg_model = vgg_net.VGGNet()
             model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
         model = model.to(config.device)
+        model = torch.nn.DataParallel(model)
         model.load_state_dict(loaded_state['models'], strict=False)
         #logging.info('Model loaded')
 
