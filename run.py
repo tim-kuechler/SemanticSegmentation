@@ -178,9 +178,9 @@ def train(config, workdir):
 def experiment(config, workdir):
     for t in np.linspace(1., 0., 21):
         print('Starting timestep: ', t)
-        iou, acc = eval(config, workdir, timestep=t, save_to_file=False)
+        iou, acc, noise = eval(config, workdir, timestep=t, save_to_file=False)
         with open(os.path.join(workdir, 'experiment.txt'), 'a+') as exp_file:
-            exp_file.write(str(t) + '\t' + str(acc) + '\t' + str(iou) + '\n')
+            exp_file.write(str(t) + '\t' + str(noise) + '\t' + str(acc) + '\t' + str(iou) + '\n')
 
 
 def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None, timestep=None, save_to_file=True):
@@ -235,7 +235,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
 
         with torch.no_grad():
-            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+            pred = model(img) if not config.model.conditional else model(perturbed_img, std)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()
@@ -253,7 +253,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
             eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
-    return  np.nanmean(ious), pixel_accs
+    return np.nanmean(ious), pixel_accs, sdt
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
