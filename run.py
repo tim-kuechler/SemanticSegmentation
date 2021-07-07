@@ -41,7 +41,7 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 209
+    epoch = 1
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
@@ -175,7 +175,14 @@ def train(config, workdir):
         epoch += 1
 
 
-def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None, timestep=None):
+def experiment(config, workdir):
+    for t in np.linspace(1., 0., 21):
+        iou, acc = eval(config, workdir, timestep=t, save_to_file=False)
+        with open(os.path.join(workdir, 'experiment.txt'), 'a+') as exp_file:
+            exp_file.write(str(t) + '\t' + str(acc) + '\t' + str(iou) + '\n')
+
+
+def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None, timestep=None, save_to_file=True):
     if not while_training:
         # Load model
         loaded_state = torch.load(os.path.join(workdir, 'checkpoints', 'curr_cpt.pth'), map_location=config.device)
@@ -239,11 +246,13 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     total_ious = np.array(total_ious).transpose()  # n_class * val_len
     ious = np.nanmean(total_ious, axis=1)
     pixel_accs = np.array(pixel_accs).mean()
-    with open(os.path.join(workdir, 'eval_acc_iou.txt'), 'a+') as eval_file:
-        eval_file.write(str(pixel_accs) + '\t' + str(np.nanmean(ious)) + '\n')
-    with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
-        eval_file.write(str(ious) + '\n')
+    if save_to_file:
+        with open(os.path.join(workdir, 'eval_acc_iou.txt'), 'a+') as eval_file:
+            eval_file.write(str(pixel_accs) + '\t' + str(np.nanmean(ious)) + '\n')
+        with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
+            eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
+    return  np.nanmean(ious), pixel_accs
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py

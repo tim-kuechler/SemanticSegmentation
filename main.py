@@ -58,4 +58,6 @@ if __name__ == '__main__':
     if args.mode == 'train':
         run.train(config, os.path.join('output', args.workdir))
     elif args.mode == 'eval':
-        run.sample(config, os.path.join('output', args.workdir))
+        run.eval(config, os.path.join('output', args.workdir))
+    elif args.mode == 'experiment':
+        run.experiment(config, os.path.join('output', args.workdir))
