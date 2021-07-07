@@ -196,15 +196,15 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
         model = model.to(config.device)
         model.load_state_dict(loaded_state['models'], strict=False)
-        logging.info('Model loaded')
+        #logging.info('Model loaded')
 
         # Get data iterators
         data_loader_train, data_loader_eval = data_loader.get_dataset(config)
-        logging.info('Dataset initialized')
+        #logging.info('Dataset initialized')
 
         # Get SDE
         sde = sde_lib.get_SDE(config)
-        logging.info('SDE initialized')
+        #logging.info('SDE initialized')
     else:
         assert model is not None
         assert data_loader_eval is not None
@@ -253,7 +253,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
             eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
-    return np.nanmean(ious), pixel_accs, std
+    return np.nanmean(ious), pixel_accs, std[0].detach().item()
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
