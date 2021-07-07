@@ -236,8 +236,10 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
 
         with torch.no_grad():
             pred = model(img) if not config.model.conditional else model(perturbed_img, std)
-        pred = torch.argmax(pred, dim=1).cpu().numpy()
 
+        cityscapes256.save_colorful_images(workdir, 'pred.png')
+
+        pred = torch.argmax(pred, dim=1).cpu().numpy()
         target = torch.argmax(target, dim=1).cpu().numpy()
 
         for p, t in zip(pred, target):
