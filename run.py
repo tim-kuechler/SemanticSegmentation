@@ -186,7 +186,7 @@ def experiment(config, workdir):
 def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None, timestep=None, save_to_file=True):
     if not while_training:
         # Load model
-        loaded_state = torch.load(os.path.join(workdir, 'checkpoints', 'curr_cpt.pth'), map_location=config.device)
+        loaded_state = torch.load(os.path.join(workdir, 'checkpoints', 'checkpoint_210.pth'), map_location=config.device)
         if config.model.name == 'unet':
             model = UNet(config)
         elif config.model.name == 'fcdense':
@@ -236,6 +236,11 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
 
         with torch.no_grad():
             pred = model(img) if not config.model.conditional else model(perturbed_img, std)
+
+        nrow = int(np.sqrt(img.shape[0]))
+        image_grid = make_grid(perturbed_img, nrow, padding=2)
+        save_image(image_grid, os.path.join(workdir, 'image_p.png'))
+        cityscapes256.save_colorful_images(pred, workdir, 'pred.png')
 
         pred = torch.argmax(pred, dim=1).cpu().numpy()
         target = torch.argmax(target, dim=1).cpu().numpy()
