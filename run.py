@@ -253,7 +253,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
         with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
             eval_file.write(str(ious) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
-    return np.nanmean(ious), pixel_accs, sdt
+    return np.nanmean(ious), pixel_accs, std
 
 
 # borrow functions and modify it from https://github.com/Kaixhin/FCN-semantic-segmentation/blob/master/main.py
