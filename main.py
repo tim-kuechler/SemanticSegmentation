@@ -8,7 +8,7 @@ import run
 
 def get_parser(**parser_kwargs):
     def mode(v):
-        if v != 'train' and v != 'eval':
+        if v != 'train' and v != 'eval' and v != 'experiment':
             raise argparse.ArgumentTypeError('train or eval expected')
         else:
             return v
