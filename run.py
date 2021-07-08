@@ -67,7 +67,7 @@ def train(config, workdir):
         logging.info('SDE initialized')
 
     eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
-         sde=None if not config.model.conditional else sde)
+         sde=None if not config.model.conditional else sde, save_to_file=False, timestep=1.)
 
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
@@ -211,7 +211,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     else:
         assert model is not None
         assert data_loader_eval is not None
-        if config.model.conditional: assert sde is not None
+        if config.model.conditional:
+            assert sde is not None
     model.eval()
 
     total_ious = []
