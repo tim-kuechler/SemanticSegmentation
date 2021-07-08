@@ -66,9 +66,6 @@ def train(config, workdir):
         sde = sde_lib.get_SDE(config)
         logging.info('SDE initialized')
 
-    eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
-         sde=None if not config.model.conditional else sde, save_to_file=False, timestep=0.)
-
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
 
@@ -181,33 +178,35 @@ def train(config, workdir):
 def experiment(config, workdir):
     for t in np.linspace(0., 1., 21):
         print('Starting timestep: ', t)
-        iou, acc, noise = eval(config, workdir, timestep=t, save_to_file=False)
+        iou, acc, noise = eval(config, workdir, timestep=None, save_to_file=False)
         with open(os.path.join(workdir, 'experiment.txt'), 'a+') as exp_file:
             exp_file.write(str(t) + '\t' + str(noise) + '\t' + str(acc) + '\t' + str(iou) + '\n')
 
 
 def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None, timestep=None, save_to_file=True):
     if not while_training:
-        # Load model
+        checkpoint_dir = os.path.join(workdir, 'checkpoints')
+
         if config.model.name == 'unet':
             model = UNet(config)
         elif config.model.name == 'fcdense':
             model = FCDenseNet103(config)
         elif config.model.name == 'fcn':
+            assert config.model.conditional == False, "FCN can only be trained unconditionally"
+            assert config.data.n_channels == 3, "FCN can only be trained on 3 channel images"
             vgg_model = vgg_net.VGGNet()
             model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
+            vgg_model.to(config.device)
         model = model.to(config.device)
-        model = torch.nn.DataParallel(model)
-        utils.restore_checkpoint(None, model, os.path.join(os.path.join(workdir, 'checkpoints'), 'curr_cpt.pth'))
-        #logging.info('Model loaded')
+        model = nn.DataParallel(model)
+
+        utils.restore_checkpoint(None, model, os.path.join(checkpoint_dir, 'curr_cpt.pth'))
 
         # Get data iterators
         data_loader_train, data_loader_eval = data_loader.get_dataset(config)
-        #logging.info('Dataset initialized')
 
         # Get SDE
         sde = sde_lib.get_SDE(config)
-        #logging.info('SDE initialized')
     else:
         assert model is not None
         assert data_loader_eval is not None
