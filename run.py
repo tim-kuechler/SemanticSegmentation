@@ -178,7 +178,7 @@ def train(config, workdir):
 def experiment(config, workdir):
     for t in np.linspace(0., 1., 21):
         print('Starting timestep: ', t)
-        iou, acc, noise = eval(config, workdir, timestep=None, save_to_file=False)
+        iou, acc, noise = eval(config, workdir, timestep=t, save_to_file=False)
         with open(os.path.join(workdir, 'experiment.txt'), 'a+') as exp_file:
             exp_file.write(str(t) + '\t' + str(noise) + '\t' + str(acc) + '\t' + str(iou) + '\n')
 
