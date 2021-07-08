@@ -67,7 +67,7 @@ def train(config, workdir):
         logging.info('SDE initialized')
 
     eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
-         sde=None if not config.model.conditional else sde, save_to_file=False, timestep=1.)
+         sde=None if not config.model.conditional else sde, save_to_file=False, timestep=0.)
 
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
