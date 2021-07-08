@@ -41,7 +41,7 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 594
+    epoch = 595
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
@@ -65,6 +65,9 @@ def train(config, workdir):
     if config.model.conditional:
         sde = sde_lib.get_SDE(config)
         logging.info('SDE initialized')
+
+    eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
+         sde=None if not config.model.conditional else sde)
 
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
