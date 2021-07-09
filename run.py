@@ -100,7 +100,7 @@ def train(config, workdir):
                 loss_per_log_period = 0
 
             #Evaluation of model loss
-            if step % config.training.eval_freq == 0 and not config.model.conditional:
+            if step % config.training.eval_freq == 0:
                 model.eval()
                 tot_eval_loss = 0
 

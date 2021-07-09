@@ -145,11 +145,12 @@ def get_config_ade20k():
     training.epochs = 5000
     training.batch_size = 8
     training.log_freq = 50
-    training.eval_freq = 500
+    training.eval_freq = 2000
     training.save_pred_freq = 1
-    training.full_eval_freq = 2
+    training.full_eval_freq = 1
     training.checkpoint_save_freq = 10
     training.sde = 'vesde'
+    training.start_noise = 0.8
 
     config.model = model = ml_collections.ConfigDict()
     model.sigma_min = 0.01
