@@ -173,7 +173,7 @@ def get_config_ade20k():
     optim.lr = 2e-4
     optim.beta1 = 0.9
     optim.eps = 1e-8
-    optim.mixed_prec = False
+    optim.mixed_prec = True
 
     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
