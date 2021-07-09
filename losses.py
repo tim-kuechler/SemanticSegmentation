@@ -74,7 +74,6 @@ def get_step_fn(config, optimizer, model, loss_fn, sde=None, scaler=None, train=
                 t = (torch.rand(int(img.shape[0]), device=config.device) * start_noise) * (1 - eps) + eps
             else:
                 t = torch.linspace(eps, start_noise, img.shape[0], device=config.device)
-            print(t)
             z = torch.randn_like(img)
             mean, std = sde.marginal_prob(img, t)
             perturbed_img = mean + std[:, None, None, None] * z

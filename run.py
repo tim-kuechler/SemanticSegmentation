@@ -254,6 +254,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
             eval_file.write(str(pixel_accs) + '\t' + str(np.nanmean(ious)) + '\n')
         with open(os.path.join(workdir, 'eval_label_iou.txt'), 'a+') as eval_file:
             eval_file.write(str(ious) + '\n')
+        with open(os.path.join(workdir, 'eval_acc_iou.txt'), 'a+') as eval_file:
+            eval_file.write(str(pixel_accs) + '\t' + str(np.nanmean(ious)) + '\n')
     print(f'Evaluation:, pix_acc: {pixel_accs}, meanIoU: {np.nanmean(ious)}, IoUs: {ious}')
     return np.nanmean(ious), pixel_accs, std[0].detach().item()
 
