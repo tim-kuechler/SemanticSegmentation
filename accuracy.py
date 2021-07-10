@@ -37,7 +37,7 @@ if __name__ == '__main__':
     dir2 = args.dataset2
 
     acc = []
-    for file1, file2 in zip(os.listdir(dir1), os.listdir(dir2)):
+    for i, (file1, file2) in enumerate(zip(sorted(os.listdir(dir1)), sorted(os.listdir(dir2)))):
         print(file1)
         print(file2)
         map1 = Image.open(os.path.join(dir1, file1))
