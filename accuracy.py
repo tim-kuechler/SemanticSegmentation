@@ -38,6 +38,8 @@ if __name__ == '__main__':
 
     acc = []
     for file1, file2 in zip(os.listdir(dir1), os.listdir(dir2)):
+        print(file1)
+        print(file2)
         map1 = Image.open(os.path.join(dir1, file1))
         map2 = Image.open(os.path.join(dir2, file2))
 
