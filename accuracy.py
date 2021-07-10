@@ -38,8 +38,8 @@ if __name__ == '__main__':
 
     acc = []
     for i, (file1, file2) in enumerate(zip(sorted(os.listdir(dir1)), sorted(os.listdir(dir2)))):
-        print(file1)
-        print(file2)
+        print(i, file1)
+        print(i, file2)
         map1 = Image.open(os.path.join(dir1, file1))
         map2 = Image.open(os.path.join(dir2, file2))
 
