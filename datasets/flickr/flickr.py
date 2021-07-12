@@ -114,7 +114,7 @@ class FLICKR(Dataset):
         print(torch.max(target))
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
-        save_colorful_images(torch.unsqueeze(target), '/export/home/tkuechle/', 'bla.png')
+        save_colorful_images(torch.unsqueeze(target, dim=0), '/export/home/tkuechle/', 'bla.png')
 
         return image, target
 
