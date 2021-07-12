@@ -19,13 +19,17 @@ labels = [
     #       name                    id    trainId
     Label('mountain1'           ,  134  ,      1),
     Label('mountain2'           ,  159  ,      1),
+    Label('mountain3'           ,  126  ,      1),
     Label('sea1'                ,  154  ,      2),
-    Label('sea2'                ,  177  ,      2),
-    Label('clouds'              ,  105   ,      3),
+    Label('sea2'                ,  147  ,      2),
+    Label('sea3'                ,  177  ,      2),
+    Label('clouds'              ,  105  ,      3),
     Label('sky'                 ,  156  ,      4),
     Label('forest'              ,  168  ,      5),
     Label('grass1'              ,  123  ,      6),
     Label('grass2'              ,  118  ,      6),
+    Label('grass3'              ,  141  ,      6),
+    Label('grass4'              ,  96   ,      6),
     Label('snow'                ,  158  ,      7)
 ]
 
@@ -111,8 +115,8 @@ class FLICKR(Dataset):
                 target[h, w] = trainId
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
-        name = self.images[index].split('/')[8] + '_'+ self.images[index].split('/')[9][:-4]
-        save_colorful_images(torch.unsqueeze(target, dim=0), '/export/home/tkuechle/', f'{name}.png')
+        #name = self.images[index].split('/')[8] + '_'+ self.images[index].split('/')[9][:-4]
+        #save_colorful_images(torch.unsqueeze(target, dim=0), '/export/home/tkuechle/', f'{name}.png')
 
         return image, target
 
