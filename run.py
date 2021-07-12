@@ -92,7 +92,7 @@ def train(config, workdir):
 
             pred = torch.argmax(_, dim=1)
             target = torch.argmax(target, dim=1)
-            _pixel_acc_flickr(pred[0,:,:], target)
+            _pixel_acc_flickr(pred[0,:,:], target[0,:,:])
 
 
 
@@ -315,6 +315,6 @@ def _pixel_acc_flickr(pred, target):
 
     for x in range(pred.shape[0]):
         for y in range(pred.shape[1]):
-            confusion_matrix[target.long(), pred.long()] += 1
+            confusion_matrix[target[x, y].item().long(), pred[target[x, y].item().long()]] += 1
     print(confusion_matrix)
 
