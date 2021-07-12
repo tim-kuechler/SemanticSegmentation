@@ -16,7 +16,6 @@ from torchvision.utils import make_grid, save_image
 import datasets.cityscapes256.cityscapes256 as cityscapes256
 import datasets.flickr.flickr as flickr
 import sde_lib
-from sklearn.metrics import accuracy_score
 
 
 def train(config, workdir):
@@ -308,6 +307,11 @@ def _pixel_acc_flickr(pred, target):
     :param target:
     :return: pixel accuracy
     """
-    accuracy = accuracy_score(target.cpu().numpy(), pred.cpu().numpy())
-    print(accuracy)
+    nb_classes = 8
+
+    confusion_matrix = torch.zeros(nb_classes, nb_classes)
+
+    print(pred.size())
+    confusion_matrix[target.long(), pred.long()] += 1
+    print(confusion_matrix)
 
