@@ -249,7 +249,10 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
 
         for p, t in zip(pred, target):
             total_ious.append(_iou(p, t, config))
-            pixel_accs.append(_pixel_acc(p, t))
+            if config.data.dataset == 'flickr':
+                pixel_accs.append(_pixel_acc_flickr(p, t))
+            else:
+                pixel_accs.append(_pixel_acc(p, t))
 
     total_ious = np.array(total_ious).transpose()  # n_class * val_len
     ious = np.nanmean(total_ious, axis=1)
@@ -301,20 +304,10 @@ def _pixel_acc(pred, target):
     return correct / total
 
 def _pixel_acc_flickr(pred, target):
-    """ Calculate pixel accuracy of prediction in comparison to original map
+    correct = (pred == target).sum()
+    total = (target == target).sum()
+    ignore_label = (target == 0).sum()
+    total -= ignore_label
 
-    :param pred:
-    :param target:
-    :return: pixel accuracy
-    """
-    nb_classes = 8
-
-    confusion_matrix = torch.zeros(nb_classes, nb_classes)
-
-    print(pred.size(), target.size())
-
-    for x in range(pred.shape[0]):
-        for y in range(pred.shape[1]):
-            confusion_matrix[target[x, y].item().long(), pred[target[x, y].item().long()]] += 1
-    print(confusion_matrix)
+    return correct / total
 
