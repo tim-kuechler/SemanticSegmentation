@@ -17,16 +17,16 @@ Label = namedtuple('Label', [
 
 labels = [
     #       name                    id    trainId
-    Label('mountain'            ,  126  ,      1),
-    Label('sea1'                ,  138  ,      2),
-    Label('sea2'                ,  145  ,      2),
-    Label('sea3'                ,  167  ,      2),
-    Label('clouds'              ,  99   ,      3),
-    Label('sky'                 ,  147  ,      4),
-    Label('forest'              ,  158  ,      5),
-    Label('grass1'              ,  116  ,      6),
+    Label('mountain1'           ,  135  ,      1),
+    Label('mountain2'           ,  160  ,      1),
+    Label('sea1'                ,  155  ,      2),
+    Label('sea2'                ,  178  ,      2),
+    Label('clouds'              ,  106   ,      3),
+    Label('sky'                 ,  157  ,      4),
+    Label('forest'              ,  169  ,      5),
+    Label('grass1'              ,  124  ,      6),
     Label('grass2'              ,  119  ,      6),
-    Label('snow'                ,  149  ,      7)
+    Label('snow'                ,  159  ,      7)
 ]
 
 class FLICKR(Dataset):
