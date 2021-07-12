@@ -112,6 +112,7 @@ class FLICKR(Dataset):
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
 
+        save_colorful_images(target, '/export/home/tkuechle/', 'bla.png')
         return image, target
 
     def __len__(self):
