@@ -111,8 +111,7 @@ class FLICKR(Dataset):
                 target[h, w] = trainId
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
-        name = self.images[index].split('/')[9][:-4]
-        print(name)
+        name = self.images[index].split('/')[8] + '_'+ self.images[index].split('/')[9][:-4]
         save_colorful_images(torch.unsqueeze(target, dim=0), '/export/home/tkuechle/', f'{name}.png')
 
         return image, target
