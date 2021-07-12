@@ -107,6 +107,7 @@ def get_config_flickr():
     training.full_eval_freq = 3
     training.checkpoint_save_freq = 15
     training.sde = 'vesde'
+    training.start_noise = 0.8
 
     # Model
     config.model = model = ml_collections.ConfigDict()
