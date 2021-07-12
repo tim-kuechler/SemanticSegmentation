@@ -17,20 +17,20 @@ def get_optimizer(config, model):
 
 
 def get_cross_entropy_loss(config):
-    def cross_entropy_one_hot_cityscapes(pred, targets):
+    def cross_entropy_one_hot_flickr(pred, targets):
         targets = torch.argmax(targets, dim=1)
         return F.cross_entropy(pred, Variable(targets), ignore_index=0)
 
-    def cross_entropy_one_hot_flickr(pred, targets):
+    def cross_entropy_one_hot_cityscapes(pred, targets):
         targets = torch.argmax(targets, dim=1)
         return F.cross_entropy(pred, Variable(targets))
 
     if config.data.dataset == 'cityscapes256':
-        return cross_entropy_one_hot_flickr
+        return cross_entropy_one_hot_cityscapes
     elif config.data.dataset == 'flickr':
         return cross_entropy_one_hot_flickr
     if config.data.dataset == 'ade20k':
-        return cross_entropy_one_hot_flickr
+        return cross_entropy_one_hot_cityscapes
 
 def get_nll_loss(config):
     def nll_loss_cityscapes(pred, targets):

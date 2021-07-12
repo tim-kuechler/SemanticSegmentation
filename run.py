@@ -14,7 +14,7 @@ from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
 import datasets.cityscapes256.cityscapes256 as cityscapes256
-from datasets.flickr.flickr import save_output_images
+import datasets.flickr.flickr as flickr
 import sde_lib
 
 
@@ -155,12 +155,12 @@ def train(config, workdir):
                 cityscapes256.save_colorful_images(target, this_pred_dir, 'mask.png')
             elif config.data.dataset == 'ade20k':
                 # Save prediction and original map as color image
-                save_output_images(pred, this_pred_dir, 'pred.png')
-                save_output_images(target, this_pred_dir, 'mask.png')
+                flickr.save_colorful_images(pred, this_pred_dir, 'pred.png')
+                flickr.save_colorful_images(target, this_pred_dir, 'mask.png')
             elif config.data.dataset == 'flickr':
                 # Save prediction and original map as grayscale image
-                save_output_images(pred, this_pred_dir, 'pred.png')
-                save_output_images(target, this_pred_dir, 'mask.png')
+                flickr.save_colorful_images(pred, this_pred_dir, 'pred.png')
+                flickr.save_colorful_images(target, this_pred_dir, 'mask.png')
 
             logging.info(f'Images for epoch {epoch} saved')
 
@@ -270,6 +270,8 @@ def _iou(pred, target, config):
     """
     ious = []
     for cls in range(config.data.n_labels):
+        if config.data.dataset == 'flickr' and cls == 0:
+            continue
         pred_inds = pred == cls
         target_inds = target == cls
         intersection = pred_inds[target_inds].sum()
@@ -291,4 +293,17 @@ def _pixel_acc(pred, target):
     correct = (pred == target).sum()
     total = (target == target).sum()
     return correct / total
+
+def _pixel_acc_flickr(pred, target):
+    """ Calculate pixel accuracy of prediction in comparison to original map
+
+    :param pred:
+    :param target:
+    :return: pixel accuracy
+    """
+    nb_classes = 8
+
+    confusion_matrix = torch.zeros(nb_classes, nb_classes)
+    confusion_matrix[target.long(), pred.long()] += 1
+    print(confusion_matrix)
 

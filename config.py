@@ -121,7 +121,7 @@ def get_config_flickr():
     # Data
     config.data = data = ml_collections.ConfigDict()
     data.dataset = 'flickr'
-    data.n_labels = 182
+    data.n_labels = 8
     data.n_channels = 3
     data.crop = True
 
