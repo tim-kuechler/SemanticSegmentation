@@ -17,16 +17,16 @@ Label = namedtuple('Label', [
 
 labels = [
     #       name                    id    trainId
-    Label('mountain1'           ,  135  ,      1),
-    Label('mountain2'           ,  160  ,      1),
-    Label('sea1'                ,  155  ,      2),
-    Label('sea2'                ,  178  ,      2),
-    Label('clouds'              ,  106   ,      3),
-    Label('sky'                 ,  157  ,      4),
-    Label('forest'              ,  169  ,      5),
-    Label('grass1'              ,  124  ,      6),
-    Label('grass2'              ,  119  ,      6),
-    Label('snow'                ,  159  ,      7)
+    Label('mountain1'           ,  134  ,      1),
+    Label('mountain2'           ,  159  ,      1),
+    Label('sea1'                ,  154  ,      2),
+    Label('sea2'                ,  177  ,      2),
+    Label('clouds'              ,  105   ,      3),
+    Label('sky'                 ,  156  ,      4),
+    Label('forest'              ,  168  ,      5),
+    Label('grass1'              ,  123  ,      6),
+    Label('grass2'              ,  118  ,      6),
+    Label('snow'                ,  158  ,      7)
 ]
 
 class FLICKR(Dataset):
@@ -110,11 +110,7 @@ class FLICKR(Dataset):
                     trainId = id2trainId[str(0)]
                 target[h, w] = trainId
 
-
-        print(torch.max(target))
-
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)
-        save_colorful_images(torch.unsqueeze(target, dim=0), '/export/home/tkuechle/', 'bla.png')
 
         return image, target
 
