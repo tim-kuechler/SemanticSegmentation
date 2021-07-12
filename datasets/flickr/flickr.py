@@ -18,8 +18,8 @@ Label = namedtuple('Label', [
 labels = [
     #       name                    id    trainId
     Label('mountain1'           ,  134  ,      1),
-    Label('mountain2'           ,  159  ,      1),
-    Label('mountain3'           ,  126  ,      1),
+    #('mountain2'           ,  159  ,      1),
+    #Label('mountain3'           ,  126  ,      1),
     Label('sea1'                ,  154  ,      2),
     Label('sea2'                ,  147  ,      2),
     Label('sea3'                ,  177  ,      2),
@@ -27,10 +27,10 @@ labels = [
     Label('sky'                 ,  156  ,      4),
     Label('forest'              ,  168  ,      5),
     Label('grass1'              ,  123  ,      6),
-    Label('grass2'              ,  118  ,      6),
-    Label('grass3'              ,  141  ,      6),
-    Label('grass4'              ,  96   ,      6),
-    Label('snow'                ,  158  ,      7)
+    #Label('grass2'              ,  118  ,      6),
+    Label('grass3'              ,  141  ,      6)
+    #Label('grass4'              ,  96   ,      6),
+    #Label('snow'                ,  158  ,      7)
 ]
 
 class FLICKR(Dataset):
