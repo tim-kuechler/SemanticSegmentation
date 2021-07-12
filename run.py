@@ -90,12 +90,6 @@ def train(config, workdir):
             loss, _ = step_fn_train(img, target)
             step += 1
 
-            pred = torch.argmax(_, dim=1)
-            target = torch.argmax(target, dim=1)
-            _pixel_acc_flickr(pred[0,:,:], target[0,:,:])
-
-
-
             #Report training loss
             loss_per_log_period += loss
             if step % config.training.log_freq == 0:
