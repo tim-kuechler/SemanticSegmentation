@@ -308,6 +308,6 @@ def _pixel_acc_flickr(pred, target):
     :param target:
     :return: pixel accuracy
     """
-    accuracy = accuracy_score(target, pred)
+    accuracy = accuracy_score(target.cpu().numpy(), pred.cpu().numpy())
     print(accuracy)
 
