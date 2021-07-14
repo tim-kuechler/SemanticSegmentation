@@ -104,7 +104,7 @@ def get_config_flickr():
     training.log_freq = 12
     training.eval_freq = 5000000
     training.save_pred_freq = 1
-    training.full_eval_freq = 3
+    training.full_eval_freq = 2
     training.checkpoint_save_freq = 15
     training.sde = 'vesde'
     training.start_noise = 0.8
