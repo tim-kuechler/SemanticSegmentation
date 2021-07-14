@@ -300,7 +300,7 @@ def _pixel_acc(pred, target):
 def _pixel_acc_flickr(pred, target):
     correct = (pred == target).sum()
     total = (target == target).sum()
-    ignore_label = (target == 0).sum()
+    ignore_label = (target == torch.zeros_like(target)).sum()
     total -= ignore_label
 
     return correct / total
