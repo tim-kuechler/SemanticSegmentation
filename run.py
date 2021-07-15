@@ -41,7 +41,7 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 1
+    epoch = 3
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
@@ -300,7 +300,7 @@ def _pixel_acc(pred, target):
 def _pixel_acc_flickr(pred, target):
     correct = (pred == target).sum()
     total = (target == target).sum()
-    ignore_label = (target == torch.zeros_like(target)).sum()
+    ignore_label = (target == np.zeros_like(target)).sum()
     total -= ignore_label
 
     return correct / total
