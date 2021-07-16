@@ -306,5 +306,6 @@ def _pixel_acc_flickr(pred, target):
     print('ignore', ignore_label)
     total -= ignore_label
 
+    print(correct, total, correct/total)
     return correct / total
 
