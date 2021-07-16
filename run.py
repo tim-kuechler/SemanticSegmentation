@@ -299,8 +299,11 @@ def _pixel_acc(pred, target):
 
 def _pixel_acc_flickr(pred, target):
     correct = (pred == target).sum()
+    print('correct', correct)
     total = (target == target).sum()
+    print('total', total)
     ignore_label = (target == np.zeros_like(target)).sum()
+    print('ignore', ignore_label)
     total -= ignore_label
 
     return correct / total
