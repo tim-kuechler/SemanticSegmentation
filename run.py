@@ -250,7 +250,7 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
 
     total_ious = np.array(total_ious).transpose()  # n_class * val_len
     ious = np.nanmean(total_ious, axis=1)
-    pixel_accs = np.array(pixel_accs).mean()
+    pixel_accs = np.nanmean(np.array(pixel_accs))
     if save_to_file:
         with open(os.path.join(workdir, 'eval_acc_iou.txt'), 'a+') as eval_file:
             eval_file.write(str(pixel_accs) + '\t' + str(np.nanmean(ious)) + '\n')
@@ -302,7 +302,6 @@ def _pixel_acc_flickr(pred, target):
     total = (target == target).sum()
     ignore_label = (target == np.zeros_like(target)).sum()
     total -= ignore_label
-
-    print(correct, total, correct/total)
+    
     return correct / total
 
