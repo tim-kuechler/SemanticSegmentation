@@ -5,7 +5,7 @@ from .layers import *
 class UNet(nn.Module):
     def __init__(self, config):
         super(UNet, self).__init__()
-        self.n_channels = config.data.n_channels + (1 if config.model.conditional else 0)
+        self.n_channels = config.data.n_channels
         self.n_classes = config.data.n_labels
         self.bilinear = config.model.bilinear
 
