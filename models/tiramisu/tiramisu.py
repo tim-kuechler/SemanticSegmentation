@@ -73,24 +73,20 @@ class FCDenseNet103(nn.Module):
                                    padding=0, bias=True)
         self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, x, noise=None):
-        temb = self.gaussian(torch.log(noise))
-        temb = self.linear1(temb)
-        temb = self.linear2(self.act(temb))
-
+    def forward(self, x):
         out = self.firstconv(x)
 
         skip_connections = []
         for i in range(len(self.down_blocks)):
-            out = self.denseBlocksDown[i](out, temb)
+            out = self.denseBlocksDown[i](out)
             skip_connections.append(out)
             out = self.transDownBlocks[i](out)
 
-        out = self.bottleneck(out, temb)
+        out = self.bottleneck(out)
         for i in range(len(self.up_blocks)):
             skip = skip_connections.pop()
             out = self.transUpBlocks[i](out, skip)
-            out = self.denseBlocksUp[i](out, temb)
+            out = self.denseBlocksUp[i](out)
 
         out = self.finalConv(out)
         out = self.softmax(out)
