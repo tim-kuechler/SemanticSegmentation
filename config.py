@@ -25,10 +25,9 @@ def get_config_cityscapes():
 
     # Data
     config.data = data = ml_collections.ConfigDict()
-    data.dataset = 'cityscapes256'
-    data.n_labels = 20
+    data.n_labels = 2
     data.n_channels = 3
-    data.crop = True
+    data.crop = False
 
     # Optimization
     config.optim = optim = ml_collections.ConfigDict()

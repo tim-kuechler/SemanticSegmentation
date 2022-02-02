@@ -14,8 +14,6 @@ from models.fcn import fcn, vgg_net
 import numpy as np
 from torchvision.utils import make_grid, save_image
 from datasets.cityscapes256.cityscapes256 import save_colorful_images
-from datasets.flickr.flickr import save_output_images
-import sde_lib
 
 
 def train(config, workdir):
@@ -139,53 +137,24 @@ def train(config, workdir):
             image_grid = make_grid(img, nrow, padding=2)
             save_image(image_grid, os.path.join(this_pred_dir, 'image.png'))
 
-            if config.data.dataset == 'cityscapes256':
-                # Save prediction and original map as color image
-                save_colorful_images(pred, this_pred_dir, 'pred.png')
-                save_colorful_images(target, this_pred_dir, 'mask.png')
-            elif config.data.dataset == 'flickr':
-                # Save prediction and original map as grayscale image
-                save_output_images(pred, this_pred_dir, 'pred.png')
-                save_output_images(target, this_pred_dir, 'mask.png')
+            # Save prediction and original map as color image
+            save_colorful_images(pred, this_pred_dir, 'pred.png')
+            save_colorful_images(target, this_pred_dir, 'mask.png')
 
             logging.info(f'Images for epoch {epoch} saved')
 
         #Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
-            eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
-                 sde=None)
+            eval(config, workdir, model=model, data_loader_eval=data_loader_eval)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
         epoch += 1
 
 
-def eval(config, workdir, while_training=False, model=None, data_loader_eval=None, sde=None):
-    if not while_training:
-        # Load model
-        loaded_state = torch.load(os.path.join(workdir, 'curr_cpt.pth'), map_location=config.device)
-        if config.model.name == 'unet':
-            model = UNet(config)
-        elif config.model.name == 'fcdense':
-            model = FCDenseNet103(config)
-        elif config.model.name == 'fcn':
-            vgg_model = vgg_net.VGGNet()
-            model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
-        model = model.to(config.device)
-        model.load_state_dict(loaded_state['models'], strict=False)
-        logging.info('Model loaded')
-
-        # Get data iterators
-        data_loader_train, data_loader_eval = data_loader.get_dataset(config)
-        logging.info('Dataset initialized')
-
-        # Get SDE
-        sde = sde_lib.get_SDE(config)
-        logging.info('SDE initialized')
-    else:
-        assert model is not None
-        assert data_loader_eval is not None
-        if config.model.conditional: assert sde is not None
+def eval(config, workdir, model=None, data_loader_eval=None):
+    assert model is not None
+    assert data_loader_eval is not None
     model.eval()
 
     total_ious = []

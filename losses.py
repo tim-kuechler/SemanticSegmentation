@@ -21,8 +21,7 @@ def get_cross_entropy_loss(config):
         targets = torch.argmax(targets, dim=1)
         return F.cross_entropy(pred, Variable(targets), ignore_index=0)
 
-    if config.data.dataset == 'cityscapes256':
-        return cross_entropy_one_hot_cityscapes
+    return cross_entropy_one_hot_cityscapes
 
 def get_nll_loss(config):
     def nll_loss_cityscapes(pred, targets):
@@ -35,9 +34,7 @@ def get_nll_loss(config):
         weights = weights.to(config.device, dtype=torch.float32)
         return F.nll_loss(pred, Variable(targets), weight=weights, ignore_index=0)
 
-
-    if config.data.dataset == 'cityscapes256':
-        return nll_loss_cityscapes
+    return nll_loss_cityscapes
 
 
 def get_loss_fn(config):
