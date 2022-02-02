@@ -39,8 +39,7 @@ class DenseBlock(nn.Module):
             in_channels + i*growth_rate, growth_rate)
             for i in range(n_layers)])
 
-    def forward(self, x, temb):
-        x += self.Dense_0(self.act(temb))[:, :, None, None]
+    def forward(self, x):
         if self.upsample:
             new_features = []
             #we pass all previous activations into each dense layer normally
@@ -92,9 +91,8 @@ class Bottleneck(nn.Module):
         self.bottleneck = DenseBlock(in_channels, growth_rate, n_layers, upsample=True)
 
 
-    def forward(self, x, temb):
-        x = self.bottleneck(x, temb)
-        return x
+    def forward(self, x):
+        return super().forward(x)
 
 
 def center_crop(layer, max_height, max_width):
