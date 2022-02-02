@@ -14,7 +14,6 @@ class FCDenseNet103(nn.Module):
         self.up_blocks = up_blocks = (12,10,7,5,4)
         skip_connection_channel_counts = []
 
-        self.gaussian = GaussianFourierProjection(128, 16)
         self.linear1 = nn.Linear(256, 512)
         self.linear2 = nn.Linear(512, 512)
         self.act = nn.SiLU()
