@@ -41,17 +41,12 @@ def train(config, workdir):
     optimizer = losses.get_optimizer(config, model)
     if config.model.name == 'fcn':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=config.optim.step_size, gamma=config.optim.gamma)
-    epoch = 60
+    epoch = 0
     logging.info('Model and optimizer initialized')
 
     # Create checkpoint directories
     checkpoint_dir = os.path.join(workdir, 'checkpoints')
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
-
-    # Check for latest checkpoint
-    if os.path.isfile(os.path.join(checkpoint_dir, 'curr_cpt.pth')):
-        utils.restore_checkpoint(optimizer, model,os.path.join(checkpoint_dir, 'curr_cpt.pth'))
-        logging.info('Checkpoint restored')
 
     # Create pred image directory
     pred_dir = os.path.join(workdir, 'pred_img')
@@ -61,11 +56,6 @@ def train(config, workdir):
     data_loader_train, data_loader_eval = data_loader.get_dataset(config)
     logging.info('Dataset initialized')
 
-    # Get SDE
-    if config.model.conditional:
-        sde = sde_lib.get_SDE(config)
-        logging.info('SDE initialized')
-
     #Get loss function
     loss_fn = losses.get_loss_fn(config)
 
@@ -73,8 +63,8 @@ def train(config, workdir):
     scaler = torch.cuda.amp.GradScaler()
 
     # Get step fn
-    step_fn_train = losses.get_step_fn(config, optimizer, model, loss_fn, sde if config.model.conditional else None, scaler, train=True)
-    step_fn_eval = losses.get_step_fn(config, optimizer, model, loss_fn, sde if config.model.conditional else None, scaler, train=False)
+    step_fn_train = losses.get_step_fn(config, optimizer, model, loss_fn, scaler, train=True)
+    step_fn_eval = losses.get_step_fn(config, optimizer, model, loss_fn, scaler, train=False)
 
     logging.info(f'Starting training loop at epoch {epoch}')
     step = 0
@@ -163,7 +153,7 @@ def train(config, workdir):
         #Evalutate model accuracy
         if epoch % config.training.full_eval_freq == 0:
             eval(config, workdir, while_training=True, model=model, data_loader_eval=data_loader_eval,
-                 sde=None if not config.model.conditional else sde)
+                 sde=None)
 
         time_for_epoch = time.time() - start_time
         logging.info(f'Finished epoch {epoch} ({step // epoch} steps in this epoch) in {time_for_epoch} seconds')
@@ -203,23 +193,8 @@ def eval(config, workdir, while_training=False, model=None, data_loader_eval=Non
     for img, target in data_loader_eval:
         img = img.to(config.device)
 
-        # Conditioning on noise scales
-        if config.model.conditional:
-            eps = 1e-5
-            t = torch.linspace(1, eps, img.shape[0], device=config.device)
-            z = torch.randn_like(img)
-            mean, std = sde.marginal_prob(img, t)
-            perturbed_img = mean + std[:, None, None, None] * z
-            max = torch.ones(perturbed_img.shape[0], device=config.device)
-            min = torch.ones(perturbed_img.shape[0], device=config.device)
-            for N in range(perturbed_img.shape[0]):
-                max[N] = torch.max(perturbed_img[N, :, :, :])
-                min[N] = torch.min(perturbed_img[N, :, :, :])
-            perturbed_img = perturbed_img - min[:, None, None, None] * torch.ones_like(img, device=config.device)
-            perturbed_img = torch.div(perturbed_img, (max - min)[:, None, None, None])
-
         with torch.no_grad():
-            pred = model(img) if not config.model.conditional else model(perturbed_img, t)
+            pred = model(img)
         pred = torch.argmax(pred, dim=1).cpu().numpy()
 
         target = torch.argmax(target, dim=1).cpu().numpy()

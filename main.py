@@ -19,10 +19,6 @@ def get_parser(**parser_kwargs):
         help='Work folder',
     )
     parser.add_argument(
-        'dataset',
-        help='cityscapes or flickr',
-    )
-    parser.add_argument(
         'mode',
         type=mode,
         help='train or eval',
