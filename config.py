@@ -5,84 +5,79 @@ import torch
 def get_config():
     return get_config_cityscapes()
 
-# FCDenseNet
-def get_config_cityscapes():
-    config = ml_collections.ConfigDict()
-
-    # Training
-    config.training = training = ml_collections.ConfigDict()
-    training.epochs = 5000
-    training.batch_size = 10
-    training.log_freq = 20
-    training.eval_freq = 500
-    training.save_pred_freq = 1
-    training.full_eval_freq = 5
-    training.checkpoint_save_freq = 15
-
-    # Model
-    config.model = model = ml_collections.ConfigDict()
-    model.name = 'fcdense'
-
-    # Data
-    config.data = data = ml_collections.ConfigDict()
-    data.n_labels = 2
-    data.n_channels = 3
-    data.crop = False
-
-    # Optimization
-    config.optim = optim = ml_collections.ConfigDict()
-    optim.weight_decay = 1e-4
-    optim.lr = 1e-4
-    optim.lr_decay = 0.995
-    optim.step_size = 1
-    optim.mixed_prec = True
-
-    config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-
-    return config
-
-# #Unet
+# # FCDenseNet
 # def get_config_cityscapes():
 #     config = ml_collections.ConfigDict()
 #
 #     # Training
 #     config.training = training = ml_collections.ConfigDict()
 #     training.epochs = 5000
-#     training.batch_size = 16
-#     training.log_freq = 12
+#     training.batch_size = 10
+#     training.log_freq = 20
 #     training.eval_freq = 500
-#     training.save_pred_freq = 5
+#     training.save_pred_freq = 1
 #     training.full_eval_freq = 5
 #     training.checkpoint_save_freq = 15
-#     training.sde = 'vesde'
 #
 #     # Model
 #     config.model = model = ml_collections.ConfigDict()
-#     model.sigma_min = 0.01
-#     model.sigma_max = 338
-#     model.num_scales = 2000
-#     model.bilinear = True
-#     model.conditional = True
-#     model.name = 'unet'
+#     model.name = 'fcdense'
 #
 #     # Data
 #     config.data = data = ml_collections.ConfigDict()
-#     data.dataset = 'cityscapes256'
-#     data.n_labels = 20
+#     data.n_labels = 2
 #     data.n_channels = 3
-#     data.crop = True
+#     data.crop = False
 #
 #     # Optimization
 #     config.optim = optim = ml_collections.ConfigDict()
-#     optim.weight_decay = 0
-#     optim.lr = 2e-4
-#     optim.beta1 = 0.9
-#     optim.eps = 1e-8
+#     optim.weight_decay = 1e-4
+#     optim.lr = 1e-4
+#     optim.lr_decay = 0.995
+#     optim.step_size = 1
 #     optim.mixed_prec = True
 #
 #     config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 #
 #     return config
+
+#Unet
+def get_config_cityscapes():
+    config = ml_collections.ConfigDict()
+
+    # Training
+    config.training = training = ml_collections.ConfigDict()
+    training.epochs = 5000
+    training.batch_size = 80
+    training.log_freq = 12
+    training.eval_freq = 2
+    training.save_pred_freq = 1
+    training.full_eval_freq = 5
+    training.checkpoint_save_freq = 5
+
+    # Model
+    config.model = model = ml_collections.ConfigDict()
+    model.bilinear = True
+    model.name = 'unet'
+
+    # Data
+    config.data = data = ml_collections.ConfigDict()
+    data.dataset = 'cityscapes256'
+    data.n_labels = 20
+    data.n_channels = 3
+    data.crop = True
+
+    # Optimization
+    config.optim = optim = ml_collections.ConfigDict()
+    optim.weight_decay = 0
+    optim.lr = 2e-4
+    optim.beta1 = 0.9
+    optim.eps = 1e-8
+    optim.mixed_prec = True
+
+    config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+
+    return config
 
 
 # #FCN

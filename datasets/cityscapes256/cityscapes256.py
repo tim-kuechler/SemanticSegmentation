@@ -71,7 +71,7 @@ class CITYSCAPES256(Dataset):
             otherwise ``train``, ``train_extra`` or ``val``
         mode (string, optional): The quality mode to use, ``fine`` or ``coarse``
     """
-    def __init__(self, root, split="train", mode="fine", crop=True):
+    def __init__(self, config, root, split="train", mode="fine", crop=True):
         self.root = root
         self.mode = 'gtFine' if mode == 'fine' else 'gtCoarse'
         self.images_dir = os.path.join(self.root, 'leftImg8bit', split)
@@ -79,7 +79,7 @@ class CITYSCAPES256(Dataset):
         self.split = split
         self.images = []
         self.targets = []
-        self.n_labels = 20
+        self.n_labels = config.data.n_labels
         self.crop = crop
 
         for city in os.listdir(self.images_dir):
