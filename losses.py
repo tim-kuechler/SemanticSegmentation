@@ -19,7 +19,7 @@ def get_optimizer(config, model):
 def get_cross_entropy_loss(config):
     def cross_entropy_one_hot_cityscapes(pred, targets):
         targets = torch.argmax(targets, dim=1)
-        return F.cross_entropy(pred, Variable(targets), ignore_index=0)
+        return F.cross_entropy(pred, Variable(targets), ignore_index=config.model.ignore_index)
 
     return cross_entropy_one_hot_cityscapes
 
@@ -32,7 +32,7 @@ def get_nll_loss(config):
                                      1.1116, 0.9037, 1.0865, 1.0955,
                                      1.0865, 1.1529, 1.0507])
         weights = weights.to(config.device, dtype=torch.float32)
-        return F.nll_loss(pred, Variable(targets), weight=weights, ignore_index=0)
+        return F.nll_loss(pred, Variable(targets), weight=weights, ignore_index=config.model.ignore_index)
 
     return nll_loss_cityscapes
 

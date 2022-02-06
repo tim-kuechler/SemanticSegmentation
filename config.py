@@ -22,6 +22,7 @@ def get_config():
 #     # Model
 #     config.model = model = ml_collections.ConfigDict()
 #     model.name = 'fcdense'
+#     model.ignore_index = -100
 #
 #     # Data
 #     config.data = data = ml_collections.ConfigDict()
@@ -59,6 +60,7 @@ def get_config_cityscapes():
     config.model = model = ml_collections.ConfigDict()
     model.bilinear = True
     model.name = 'unet'
+    model.ignore_index = -100
 
     # Data
     config.data = data = ml_collections.ConfigDict()
