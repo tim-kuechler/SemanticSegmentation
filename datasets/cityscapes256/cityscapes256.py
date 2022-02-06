@@ -11,7 +11,6 @@ import torch.nn.functional
 import numpy as np
 
 
-id2trainId = {}
 Label = namedtuple('Label', [
                    'name',
                    'id',
@@ -72,6 +71,7 @@ class CITYSCAPES256(Dataset):
         mode (string, optional): The quality mode to use, ``fine`` or ``coarse``
     """
     def __init__(self, config, root, split="train", mode="fine", crop=True):
+        self.id2trainId = {}
         self.root = root
         self.mode = 'gtFine' if mode == 'fine' else 'gtCoarse'
         self.images_dir = os.path.join(self.root, 'leftImg8bit', split)
@@ -92,13 +92,13 @@ class CITYSCAPES256(Dataset):
                 self.targets.append(os.path.join(target_dir, target_name))
 
         # change id to trainId
-        id2trainId[str(0)] = 0  # add an void class
+        self.id2trainId[str(0)] = 0  # add an void class
         for obj in labels:
             if obj.ignoreInEval:
                 continue
             idx = obj.trainId
             id = obj.id
-            id2trainId[str(id)] = idx
+            self.id2trainId[str(id)] = idx
 
     def __getitem__(self, index):
         """
@@ -135,9 +135,9 @@ class CITYSCAPES256(Dataset):
             for w in range(target.shape[1]):
                 id = target[h, w].item()
                 try:
-                    trainId = id2trainId[str(id)]
+                    trainId = self.id2trainId[str(id)]
                 except:
-                    trainId = id2trainId[str(0)]
+                    trainId = self.id2trainId[str(0)]
                 target[h, w] = trainId
 
         target = torch.nn.functional.one_hot(target, num_classes=self.n_labels).permute(2, 0, 1)

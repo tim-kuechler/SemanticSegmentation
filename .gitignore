@@ -2,3 +2,5 @@
 output/
 datasets_data/
 cityscapes/
+__pycache__/
+models/__pycache__/

@@ -27,7 +27,6 @@ def train(config, workdir):
     elif config.model.name == 'fcdense':
         model = FCDenseNet103(config)
     elif config.model.name == 'fcn':
-        assert config.model.conditional == False, "FCN can only be trained unconditionally"
         assert config.data.n_channels == 3, "FCN can only be trained on 3 channel images"
         vgg_model = vgg_net.VGGNet()
         model = fcn.FCNs(pretrained_net=vgg_model, n_class=config.data.n_labels)
@@ -88,7 +87,7 @@ def train(config, workdir):
                 loss_per_log_period = 0
 
             #Evaluation of model loss
-            if step % config.training.eval_freq == 0 and not config.model.conditional:
+            if step % config.training.eval_freq == 0:
                 model.eval()
                 tot_eval_loss = 0
 

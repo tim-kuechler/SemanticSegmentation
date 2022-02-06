@@ -7,9 +7,9 @@ def get_dataset(config):
 
     dataset_train = CITYSCAPES256(config=config, root='./cityscapes', split='train', mode='fine',
                                   crop=config.data.crop)
-    data_loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=4)
+    data_loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=8)
     dataset_eval = CITYSCAPES256(config=config, root='./cityscapes', split='val', mode='fine',
                                  crop=config.data.crop)
-    data_loader_eval = DataLoader(dataset_eval, batch_size=batch_size, shuffle=True, num_workers=4)
+    data_loader_eval = DataLoader(dataset_eval, batch_size=batch_size, shuffle=True, num_workers=8)
 
     return data_loader_train, data_loader_eval
